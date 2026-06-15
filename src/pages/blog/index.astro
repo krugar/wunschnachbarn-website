@@ -1,0 +1,128 @@
+---
+import Base from '../../layouts/Base.astro';
+import Footer from '../../components/Footer.astro';
+import KlufterbachNav from '../../components/KlufterbachNav.svelte';
+import BlogList from '../../components/BlogList.svelte';
+
+// Seed blog posts (will come from CMS in Phase 7)
+const seedPosts = [
+  {
+    id: 1,
+    slug: 'konsent-entscheid-laerschutz',
+    date: '12. März 2026',
+    category: 'Plenum',
+    title: 'Was uns ein Konsent-Entscheid über Lärmschutz beibrachte',
+    excerpt: 'Wir haben drei Plenen gebraucht. Am Ende war die Lösung kleiner als der Streit.',
+    heroImage: null, // Placeholder
+  },
+  {
+    id: 2,
+    slug: 'heizungsfrage-entschieden',
+    date: '28. Februar 2026',
+    category: 'Bauphase',
+    title: 'Die Heizungsfrage ist (fast) entschieden',
+    excerpt: 'Wärmepumpe plus Pufferspeicher plus PV — die Zahlen sehen gut aus. Was noch fehlt.',
+    heroImage: null,
+  },
+  {
+    id: 3,
+    slug: 'drehbank-vorfach',
+    date: '10. Februar 2026',
+    category: 'Werkstatt',
+    title: 'Wir haben eine alte Drehbank geerbt',
+    excerpt: 'Sie steht im Keller und wartet. Werkstattkreis sucht Menschen, die Lust auf Metall haben.',
+    heroImage: null,
+  },
+  {
+    id: 4,
+    slug: 'mistbeet-januar',
+    date: '31. Januar 2026',
+    category: 'Garten',
+    title: 'Mistbeet bauen, im Januar',
+    excerpt: 'Vier Paletten, ein Sack Pferdemist, drei Stunden. Mehr brauchte es nicht.',
+    heroImage: null,
+  },
+  {
+    id: 5,
+    slug: 'keine-mehrheitsentscheidungen',
+    date: '18. Januar 2026',
+    category: 'Soziokratie',
+    title: 'Warum wir keine Mehrheitsentscheidungen treffen',
+    excerpt: 'Konsent ist nicht Konsens. Eine kurze Einführung für Interessierte.',
+    heroImage: null,
+  },
+];
+
+const categories = ['Alle', 'Plenum', 'Bauphase', 'Werkstatt', 'Garten', 'Soziokratie'];
+---
+
+<Base title="Blog – Wunschnachbarn Bonn eG">
+  <KlufterbachNav client:load transition:persist="klufterbach-nav" />
+
+  <main id="main">
+    <article class="blog-page">
+      <header class="blog-header">
+        <span class="eyebrow">Blog</span>
+        <h1>Aus dem Plenum</h1>
+        <p class="blog-subline">
+          Berichte aus unseren Arbeitskreisen, Plenen und vom Weg zu unserem gemeinsamen Zuhause.
+        </p>
+      </header>
+
+      <BlogList
+        posts={seedPosts}
+        categories={categories}
+        client:load
+      />
+    </article>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .blog-page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--sp-8) var(--sp-5);
+  }
+
+  .blog-header {
+    margin-bottom: var(--sp-8);
+    text-align: center;
+  }
+
+  .blog-header .eyebrow {
+    color: var(--wn-violet);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+  }
+
+  .blog-header h1 {
+    font-size: var(--fs-display);
+    margin: var(--sp-3) 0 var(--sp-4);
+  }
+
+  .blog-subline {
+    font-size: var(--fs-body-lg);
+    color: var(--fg-muted);
+    max-width: 50ch;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 768px) {
+    .blog-page {
+      padding: var(--sp-6) var(--sp-4);
+    }
+
+    .blog-header h1 {
+      font-size: var(--fs-h2);
+    }
+
+    .blog-subline {
+      font-size: var(--fs-body);
+    }
+  }
+</style>

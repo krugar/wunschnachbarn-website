@@ -1,0 +1,181 @@
+---
+import Base from '../../layouts/Base.astro';
+import Footer from '../../components/Footer.astro';
+import KlufterbachNav from '../../components/KlufterbachNav.svelte';
+---
+
+<Base title="Die Heizungsfrage ist (fast) entschieden – Wunschnachbarn Bonn eG">
+  <KlufterbachNav client:load transition:persist="klufterbach-nav" />
+
+  <main id="main">
+    <article class="blog-post-page">
+      <header class="post-header">
+        <a href="/blog" class="back-link">← Zurück zur Übersicht</a>
+
+        <div class="post-meta">
+          <time class="post-date">28. Februar 2026</time>
+          <span class="post-category">Bauphase</span>
+        </div>
+
+        <h1>Die Heizungsfrage ist (fast) entschieden</h1>
+      </header>
+
+      <div class="post-content">
+        <p>Eine unserer wichtigsten technischen Entscheidungen steht vor dem Abschluss: Wie heizen wir unsere zwei Bestandsgebäude energieeffizient?</p>
+
+        <p>Nach Monaten der Beratung, der Berechnungen und der Besuche bei ähnlichen Projekten haben wir eine Lösung gefunden, die unsere ökologischen und ökonomischen Ziele in Einklang bringt.</p>
+
+        <h3>Die Komponenten</h3>
+
+        <p>Unsere Entscheidung fiel auf eine Wärmepumpe in Kombination mit einem großen Pufferspeicher und einer Photovoltaikanlage auf dem Dach.</p>
+
+        <p><strong>Wärmepumpe:</strong> Wir setzen auf eine Luft-Wasser-Wärmepumpe mit guter Jahresarbeitszahl. Sie nutzt die Umgebungswärme und arbeitet mit Strom.</p>
+
+        <p><strong>Pufferspeicher:</strong> Ein 1000-Liter-Speicher puffert die Wärme und ermöglicht es uns, auch Zeiten mit günstigen Stromtarifen optimal zu nutzen.</p>
+
+        <p><strong>Photovoltaik:</strong> 15 kWp auf dem Dach produzieren in den nächsten Jahren fast so viel Strom, wie die Wärmepumpe verbraucht. Der Überschuss fließt ins Netz bzw. in eventuelle spätere Batteriespeicher.</p>
+
+        <h3>Die Zahlen</h3>
+
+        <p>Unsere Berechnungen zeigen, dass wir den Wärmebedarf der Bestandsgebäude nach dem Umbau zu etwa 60% aus selbst erzeugtem Solarstrom decken können. Die restlichen 40% beziehen wir zu günstigen Tarifen.</p>
+
+        <p>Das bedeutet: Unsere Heizkosten werden deutlich niedriger als bei konventionellen Lösungen — und der CO₂-Fußabdruck ist minimal.</p>
+
+        <h3>Was noch fehlt</h3>
+
+        <p>Die Entscheidung ist final, aber die Umsetzung steht bevor. Wir müssen noch die genaue Auslegung der Anlage planen, Förderanträge einreichen und mit den Handwerkern die Details klären.</p>
+
+        <p>Ein spannender Abschnitt unseres Projekts beginnt. Wir halten euch auf dem Laufenden!</p>
+      </div>
+
+      <footer class="post-footer">
+        <a href="/blog" class="back-to-blog-button">
+          Alle Beiträge ansehen
+        </a>
+      </footer>
+    </article>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .blog-post-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--sp-8) var(--sp-5);
+  }
+
+  .post-header {
+    margin-bottom: var(--sp-8);
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--wn-graphite);
+    text-decoration: none;
+    border-radius: var(--r-sm);
+    margin-bottom: var(--sp-5);
+    transition: all var(--dur-2) var(--ease-out);
+  }
+
+  .back-link:hover {
+    color: var(--wn-violet);
+    background: var(--wn-mint-100);
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+  }
+
+  .post-date {
+    font-size: var(--fs-body);
+    color: var(--wn-graphite);
+  }
+
+  .post-category {
+    padding: var(--sp-2) var(--sp-4);
+    background: var(--wn-mint-100);
+    border-radius: var(--r-pill);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--wn-violet);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .post-header h1 {
+    font-size: var(--fs-h1);
+    margin: 0 0 var(--sp-4);
+  }
+
+  .post-content {
+    font-size: var(--fs-body-lg);
+    line-height: var(--lh-loose);
+    color: var(--fg);
+  }
+
+  .post-content h3 {
+    font-size: var(--fs-h4);
+    margin: var(--sp-6) 0 var(--sp-3);
+  }
+
+  .post-content p {
+    margin-bottom: 1.5em;
+  }
+
+  .post-content strong {
+    color: var(--wn-green-deep);
+    font-weight: 700;
+  }
+
+  .post-footer {
+    margin-top: var(--sp-10);
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--wn-fog);
+    text-align: center;
+  }
+
+  .back-to-blog-button {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--sp-3) var(--sp-5);
+    background: var(--wn-violet);
+    color: var(--wn-paper);
+    text-decoration: none;
+    border-radius: var(--r-pill);
+    font-weight: 600;
+    transition: background var(--dur-2) var(--ease-out),
+                transform var(--dur-1) var(--ease-out);
+  }
+
+  .back-to-blog-button:hover {
+    background: #931558;
+  }
+
+  .back-to-blog-button:active {
+    transform: scale(0.97);
+  }
+
+  @media (max-width: 768px) {
+    .blog-post-page {
+      padding: var(--sp-6) var(--sp-4);
+    }
+
+    .post-header h1 {
+      font-size: var(--fs-h2);
+    }
+
+    .post-content {
+      font-size: var(--fs-body);
+    }
+  }
+</style>

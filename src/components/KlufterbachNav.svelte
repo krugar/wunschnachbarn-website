@@ -174,6 +174,13 @@
     activeStationId = null;
   }
 
+  // Navigate back to home
+  function navigateToHome() {
+    navigate('/');
+  }
+
+  // Compute station positions from SVG path
+
   // Compute station positions from SVG path
   function computeStationPositions() {
     if (!pathEl || isMobile) return;
@@ -245,6 +252,17 @@
 
 <div class="klu-page" data-compact={isCompact ? "true" : "false"} bind:this={pageEl}>
   <a href="#main" class="klu-skip">Zum Inhalt springen</a>
+
+  {#if currentRoute.startsWith('/blog')}
+    <header class="klu-blog-nav">
+      <button class="back-home" onclick={navigateToHome} aria-label="Zurück zur Startseite">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        <span>Zurück zum Bach</span>
+      </button>
+    </header>
+  {/if}
 
   <!-- River SVG with stations overlay -->
   <section class="klu-river">
@@ -339,6 +357,45 @@
   }
   .klu-skip:focus {
     top: var(--sp-5);
+  }
+
+  /* Blog-specific nav (back to home on /blog* routes) */
+  .klu-blog-nav {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+  }
+
+  .klu-blog-nav .back-home {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    background: var(--wn-paper);
+    border: 2px solid var(--wn-fog);
+    border-radius: var(--r-pill);
+    font-family: var(--ff-text);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--wn-graphite);
+    cursor: pointer;
+    transition: all var(--dur-2) var(--ease-out);
+  }
+
+  .klu-blog-nav .back-home:hover {
+    border-color: var(--wn-violet);
+    color: var(--wn-violet);
+  }
+
+  .klu-blog-nav .back-home:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .klu-blog-nav .back-home span {
+    white-space: nowrap;
   }
 
   /* River strip (morphs from full-page S to header bar) */
