@@ -65,15 +65,45 @@
   // State: mobile breakpoint
   let isMobile = $state(false);
 
+  // State: scroll position (for home page morph trigger)
+  let scrollY = $state(0);
+
+  // State: current route (for compact state on /blog*)
+  let currentRoute = $state(typeof window !== 'undefined' ? window.location.pathname : '/');
+
   // Refs
   let pathEl: SVGPathElement | null = null;
   let pageEl: HTMLElement | null = null;
 
-  // Computed: is there an active station (for compact state later)
+  // Computed: is there an active station
   const hasActiveStation = $derived(activeStationId !== null);
 
-  // Computed: current route (will use for compact state later)
-  const currentRoute = $derived(window.location.pathname);
+  // Computed: should be in compact mode?
+  // Compact if: (has active content box) OR (on /blog* routes) OR (scrolled past hero on home)
+  const isCompact = $derived(
+    hasActiveStation ||
+    currentRoute.startsWith('/blog') ||
+    (currentRoute === '/' && scrollY > 400)
+  );
+
+  // Track scroll position
+  function handleScroll() {
+    scrollY = window.scrollY;
+  }
+
+  // Handle route changes (View Transitions client-side navigation)
+  function handleRouteChange() {
+    const newRoute = window.location.pathname;
+    currentRoute = newRoute;
+
+    // Reset scroll position when route changes
+    scrollY = window.scrollY;
+
+    // Update URL hash if a station is active
+    if (activeStationId && !newRoute.startsWith('/blog')) {
+      window.history.replaceState(null, '', `#${activeStationId}`);
+    }
+  }
 
   // Handle station click
   function handleStationClick(stationId: string) {
@@ -117,12 +147,24 @@
 
   // Initialize on mount
   onMount(() => {
+    // Check initial route now that window is available
+    currentRoute = window.location.pathname;
+
     checkMobile();
     computeStationPositions();
 
     // Listen for resize for mobile breakpoint
     const mediaQuery = window.matchMedia("(max-width: 820px)");
     mediaQuery.addEventListener("change", checkMobile);
+
+    // Listen for scroll (only on home page)
+    if (currentRoute === '/') {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    // Listen for route changes (View Transitions navigation)
+    window.addEventListener('popstate', handleRouteChange);
+    window.addEventListener('astro:page-load', handleRouteChange);
 
     // Listen for hash changes (for deep linking)
     const handleHashChange = () => {
@@ -145,13 +187,16 @@
     // Cleanup
     return () => {
       mediaQuery.removeEventListener("change", checkMobile);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('popstate', handleRouteChange);
+      window.removeEventListener('astro:page-load', handleRouteChange);
       window.removeEventListener("hashchange", handleHashChange);
       window.removeEventListener("keydown", handleKeyDown);
     };
   });
 </script>
 
-<div class="klu-page" data-compact={hasActiveStation ? "true" : "false"} bind:this={pageEl}>
+<div class="klu-page" data-compact={isCompact ? "true" : "false"} bind:this={pageEl}>
   <a href="#main" class="klu-skip">Zum Inhalt springen</a>
 
   <!-- River SVG with stations overlay -->
@@ -182,12 +227,12 @@
       />
     </svg>
 
-    <div class="klu-headline" aria-hidden={hasActiveStation ? "true" : undefined}>
+    <div class="klu-headline" aria-hidden={isCompact ? "true" : undefined}>
       <span class="eyebrow">Wohngenossenschaft · Bonn</span>
       <h1>Gemeinschaft am Klufterbach.</h1>
     </div>
 
-    <div class="klu-subline" aria-hidden={hasActiveStation ? "true" : undefined}>
+    <div class="klu-subline" aria-hidden={isCompact ? "true" : undefined}>
       <p>
         Folge dem Bach. Sechs Stationen erzählen, wer wir sind und wie
         wir am Klufterbach leben wollen.
@@ -199,8 +244,8 @@
         <button
           type="button"
           class="klu-station"
-          style:left={!isMobile && hasActiveStation ? `${(i / (STATIONS.length - 1)) * 84 + 8}%` : `${(station.x / 1280) * 100}%`}
-          style:top={!isMobile && hasActiveStation ? "50%" : `${(station.y / 720) * 100}%`}
+          style:left={!isMobile && isCompact ? `${(i / (STATIONS.length - 1)) * 84 + 8}%` : `${(station.x / 1280) * 100}%`}
+          style:top={!isMobile && isCompact ? "50%" : `${(station.y / 720) * 100}%`}
           aria-expanded={activeStationId === station.id}
           aria-controls={!station.isRoute ? `panel-${station.id}` : undefined}
           onclick={() => handleStationClick(station.id)}
