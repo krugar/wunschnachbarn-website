@@ -1,0 +1,74 @@
+---
+import Base from '../layouts/Base.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Base title="Datenschutz – Wunschnachbarn Bonn eG">
+  <a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+  <main id="main">
+    <article class="legal-page">
+      <header class="legal-header">
+        <h1>Datenschutz</h1>
+      </header>
+
+      <section class="legal-content">
+        <p class="placeholder-note">
+          <em>Platzhalter — Datenschutzerklärung wird vom Eigentümer ergänzt.</em>
+        </p>
+
+        <h2>Einleitung</h2>
+
+        <p>
+          Wir nehmen den Schutz Ihrer persönlichen Daten sehr ernst. Wir behandeln
+          Ihre personenbezogenen Daten vertraulich und entsprechend der gesetzlichen
+          Datenschutzvorschriften sowie dieser Datenschutzerklärung.
+        </p>
+
+        <h2>Datenerhebung und -verwendung</h2>
+
+        <p>
+          [Details zur Datenerfassung auf dieser Website werden vom Eigentümer ergänzt.]
+        </p>
+
+        <h2>Kontakt</h2>
+
+        <p>
+          Bei Fragen zum Datenschutz können Sie uns per E-Mail unter
+          <a href="mailto:mitmachen@wunschnachbarn.org">mitmachen@wunschnachbarn.org</a>
+          erreichen.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .legal-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--sp-10) var(--sp-5);
+  }
+
+  .legal-header {
+    margin-bottom: var(--sp-8);
+  }
+
+  .legal-header h1 {
+    margin-bottom: var(--sp-3);
+  }
+
+  .legal-content h2 {
+    margin: var(--sp-7) 0 var(--sp-4);
+  }
+
+  .placeholder-note {
+    background: var(--wn-mint-100);
+    border-left: 3px solid var(--wn-orange);
+    padding: var(--sp-4);
+    border-radius: var(--r-sm);
+    margin-bottom: var(--sp-5);
+  }
+</style>

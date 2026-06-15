@@ -1,0 +1,105 @@
+---
+import logoSrc from '/src/assets/logo.svg';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img
+        src={logoSrc}
+        alt="Wunschnachbarn Bonn eG"
+        class="footer-logo"
+        width="240"
+        height="auto"
+      />
+    </div>
+
+    <nav class="footer-nav" aria-label="Fußzeilen-Navigation">
+      <ul>
+        <li>
+          <a href="/impressum">Impressum</a>
+        </li>
+        <li>
+          <a href="/datenschutz">Datenschutz</a>
+        </li>
+      </ul>
+    </nav>
+
+    <p class="footer-copyright">
+      © {year} Wunschnachbarn Bonn eG
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--wn-green-deep);
+    color: var(--wn-paper);
+    padding: var(--sp-8) var(--sp-5);
+    margin-top: var(--sp-10);
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-5);
+    text-align: center;
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+
+  .footer-logo {
+    width: 240px;
+    height: auto;
+    /* No filter — the logo SVG should handle its own coloring */
+  }
+
+  .footer-nav ul {
+    display: flex;
+    gap: var(--sp-5);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .footer-nav a {
+    color: var(--wn-paper);
+    text-decoration-color: rgba(247, 246, 241, 0.3);
+    transition: color var(--dur-2) var(--ease-out),
+                text-decoration-color var(--dur-2) var(--ease-out);
+  }
+
+  .footer-nav a:hover {
+    color: var(--wn-orange);
+    text-decoration-color: var(--wn-orange);
+  }
+
+  .footer-copyright {
+    font-size: var(--fs-small);
+    color: rgba(247, 246, 241, 0.6);
+    margin: 0;
+  }
+
+  @media (min-width: 768px) {
+    .footer-inner {
+      flex-direction: row;
+      justify-content: space-between;
+      text-align: left;
+    }
+
+    .footer-brand {
+      align-items: flex-start;
+      gap: var(--sp-2);
+    }
+  }
+</style>

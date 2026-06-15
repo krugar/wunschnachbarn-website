@@ -1,0 +1,259 @@
+/* ============================================================
+   Wunschnachbarn Bonn eG — Design Tokens
+   Colors & Typography
+   ============================================================ */
+
+/* House font — Barlow Semi Condensed used as a free, Google-served
+   stand-in for Avenir Next Condensed. Swap for true Avenir Next
+   Condensed once a licence is secured. The display weight 800 is
+   what carries the logo-adjacent voice on headers. */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800;900&display=swap');
+
+:root {
+
+  /* ----------------------------------------------------------
+     COLORS — Primary green system
+     ----------------------------------------------------------
+     Two cool greens carry structure (logo, nav, headlines).
+     One warm olive green adds depth and lives on surfaces. */
+
+  --wn-green-deep:    #003D1F;   /* rgb(  0, 61, 31) — primary, cool, digital */
+  --wn-green-forest:  #27461E;   /* rgb( 39, 70, 30) — warm dark, body anchor */
+  --wn-green-olive:   #91A627;   /* rgb(145,166, 39) — warm bright accent */
+
+  /* Mint tones derived from the Klufterbach forest texture.
+     Used as washes, large surface fills and section backgrounds. */
+  --wn-mint-100:      #EFF6F0;   /* very light wash */
+  --wn-mint-200:      #D9EADE;   /* light surface */
+  --wn-mint-300:      #B7DBC2;   /* texture mid — matches forest-pattern green */
+  --wn-mint-500:      #8AB89A;   /* texture deep */
+
+  /* ----------------------------------------------------------
+     COLORS — Secondary accents
+     ---------------------------------------------------------- */
+
+  --wn-violet:        #AE1A6E;   /* rgb(174, 26,110) — buttons, links, focus */
+  --wn-violet-soft:   #C97AA8;   /* derived — swoosh band, hovers */
+  --wn-orange:        #DC6D12;   /* rgb(220,109, 18) — CTAs, highlights */
+  --wn-orange-soft:   #E89C5A;   /* derived — warm fill, hover lift */
+
+  /* ----------------------------------------------------------
+     COLORS — Neutrals
+     ---------------------------------------------------------- */
+
+  --wn-ink:           #1A2418;   /* near-black with green undertone */
+  --wn-graphite:      #3E4A3D;   /* secondary text */
+  --wn-stone:         #6B7669;   /* tertiary, captions */
+  --wn-fog:           #C9CFC5;   /* hairlines, dividers */
+  --wn-paper:         #F7F6F1;   /* warm off-white — page background */
+  --wn-paper-cool:    #F2F4EF;   /* slightly cooler paper */
+  --wn-white:         #FFFFFF;
+
+  /* ----------------------------------------------------------
+     SEMANTIC ROLES
+     Use these in components; do not reach for raw palette tokens. */
+
+  --bg:               var(--wn-paper);
+  --bg-alt:           var(--wn-mint-100);
+  --bg-deep:          var(--wn-green-deep);
+
+  --fg:               var(--wn-ink);
+  --fg-muted:         var(--wn-graphite);
+  --fg-soft:          var(--wn-stone);
+  --fg-on-dark:       var(--wn-paper);
+
+  --rule:             var(--wn-fog);
+  --rule-strong:      var(--wn-green-forest);
+
+  --accent:           var(--wn-violet);   /* primary interactive */
+  --accent-hover:     #931558;
+  --highlight:        var(--wn-orange);   /* secondary attention */
+  --highlight-hover:  #BF5B0A;
+
+  --link:             var(--wn-violet);
+  --link-hover:       var(--wn-orange);
+  --focus-ring:       var(--wn-orange);
+
+  --card-bg:          var(--wn-green-deep);
+  --card-fg:          var(--wn-paper);
+
+  /* ----------------------------------------------------------
+     TYPOGRAPHY — Font stacks
+     ---------------------------------------------------------- */
+
+  --ff-display:  "Barlow Condensed", "Avenir Next Condensed", "Oswald", sans-serif;
+  --ff-text:     "Barlow Semi Condensed", "Avenir Next Condensed", "Avenir Next", "Helvetica Neue", sans-serif;
+  --ff-mono:     ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ----------------------------------------------------------
+     TYPOGRAPHY — Scale (modular, 1.250 minor third)
+     Designed for desktop; mobile applies a soft clamp on h1/h2. */
+
+  --fs-display:  clamp(56px, 7vw, 96px);
+  --fs-h1:       clamp(40px, 4.6vw, 64px);
+  --fs-h2:       clamp(30px, 3.2vw, 44px);
+  --fs-h3:       28px;
+  --fs-h4:       22px;
+  --fs-body-lg:  19px;
+  --fs-body:     17px;
+  --fs-small:    15px;
+  --fs-caption:  13px;
+  --fs-eyebrow:  13px;
+
+  --lh-tight:    1.05;
+  --lh-snug:     1.15;
+  --lh-normal:   1.45;
+  --lh-loose:    1.6;
+
+  --ls-tight:    -0.01em;
+  --ls-eyebrow:   0.14em;
+  --ls-caps:      0.08em;
+
+  /* ----------------------------------------------------------
+     SPACING — 4-pt grid
+     ---------------------------------------------------------- */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  24px;
+  --sp-6:  32px;
+  --sp-7:  48px;
+  --sp-8:  64px;
+  --sp-9:  96px;
+  --sp-10: 128px;
+
+  /* ----------------------------------------------------------
+     RADII — soft, generous on cards; pill on buttons
+     ---------------------------------------------------------- */
+  --r-xs:  4px;
+  --r-sm:  8px;
+  --r-md:  14px;
+  --r-lg:  22px;
+  --r-xl:  32px;
+  --r-pill: 999px;
+
+  /* ----------------------------------------------------------
+     ELEVATION — soft, low contrast. Most surfaces are flat.
+     ---------------------------------------------------------- */
+  --shadow-1: 0 1px 2px rgba(26,36,24,.06), 0 1px 1px rgba(26,36,24,.04);
+  --shadow-2: 0 4px 10px rgba(26,36,24,.07), 0 1px 2px rgba(26,36,24,.05);
+  --shadow-3: 0 18px 40px rgba(0,61,31,.14), 0 4px 8px rgba(26,36,24,.06);
+  --shadow-card-dark: 0 18px 32px rgba(0,61,31,.18);
+
+  /* ----------------------------------------------------------
+     MOTION
+     ---------------------------------------------------------- */
+  --ease-out:   cubic-bezier(.2, .8, .2, 1);
+  --ease-in-out: cubic-bezier(.4, 0, .2, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+}
+
+/* ============================================================
+   ELEMENT DEFAULTS
+   ============================================================ */
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--ff-text);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--ff-display);
+  color: var(--wn-green-deep);
+  font-weight: 800;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  text-wrap: balance;
+  margin: 0;
+}
+
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); }
+h3 { font-size: var(--fs-h3); font-weight: 700; }
+h4 { font-size: var(--fs-h4); font-weight: 700; line-height: var(--lh-snug); }
+
+p {
+  margin: 0 0 1em;
+  text-wrap: pretty;
+  max-width: 62ch;
+}
+
+a {
+  color: var(--link);
+  text-decoration-color: color-mix(in srgb, var(--link) 35%, transparent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  transition: color var(--dur-2) var(--ease-out),
+              text-decoration-color var(--dur-2) var(--ease-out);
+}
+a:hover  { color: var(--link-hover); text-decoration-color: var(--link-hover); }
+a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection { background: var(--wn-orange); color: var(--wn-paper); }
+
+/* ============================================================
+   UTILITY TYPE CLASSES
+   ============================================================ */
+
+.eyebrow {
+  font-family: var(--ff-text);
+  font-size: var(--fs-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--wn-violet);
+}
+
+.display {
+  font-family: var(--ff-display);
+  font-size: var(--fs-display);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+}
+
+.lede {
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-loose);
+  color: var(--fg-muted);
+}
+
+.caption {
+  font-size: var(--fs-caption);
+  color: var(--fg-soft);
+  letter-spacing: 0.01em;
+}
+
+/* ============================================================
+   BACKGROUND PATTERN — the Klufterbach forest texture
+   Use on hero sections, cards, full bleeds.
+   ============================================================ */
+
+.bg-forest {
+  background-color: var(--wn-mint-300);
+  background-image: url("/assets/design-system/forest-texture.png");
+  background-size: 800px auto;
+  background-repeat: repeat;
+  background-blend-mode: multiply;
+}
+.bg-forest-light {
+  background-color: var(--wn-mint-200);
+  background-image: url("/assets/design-system/forest-texture.png");
+  background-size: 700px auto;
+  background-repeat: repeat;
+  background-blend-mode: soft-light;
+  opacity: 1;
+}

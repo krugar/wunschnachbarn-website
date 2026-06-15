@@ -1,0 +1,86 @@
+---
+import Base from '../layouts/Base.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Base title="Impressum – Wunschnachbarn Bonn eG">
+  <a href="#main" class="skip-link">Zum Inhalt springen</a>
+
+  <main id="main">
+    <article class="legal-page">
+      <header class="legal-header">
+        <h1>Impressum</h1>
+      </header>
+
+      <section class="legal-content">
+        <p class="placeholder-note">
+          <em>Platzhalter — rechtliche Angaben werden vom Eigentümer ergänzt.</em>
+        </p>
+
+        <h2>Angaben gemäß § 5 DDG</h2>
+
+        <dl class="legal-details">
+          <dt>Name</dt>
+          <dd>Wunschnachbarn Bonn eG</dd>
+
+          <dt>Anschrift</dt>
+          <dd>[Straße, Hausnummer]</dd>
+          <dd>[PLZ] [Ort]</dd>
+
+          <dt>E-Mail</dt>
+          <dd><a href="mailto:mitmachen@wunschnachbarn.org">mitmachen@wunschnachbarn.org</a></dd>
+
+          <dt>Vertretungsberechtigte</dt>
+          <dd>[Vorname Nachname, Vorname Nachname]</dd>
+
+          <dt>Register</dt>
+          <dd>Genossenschaftsregister [Nummer]</dd>
+          <dd>[Amtsgericht]</dd>
+        </dl>
+      </section>
+    </article>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .legal-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--sp-10) var(--sp-5);
+  }
+
+  .legal-header {
+    margin-bottom: var(--sp-8);
+  }
+
+  .legal-header h1 {
+    margin-bottom: var(--sp-3);
+  }
+
+  .legal-content h2 {
+    margin: var(--sp-7) 0 var(--sp-4);
+  }
+
+  .legal-details {
+    dt {
+      font-weight: 600;
+      margin-top: var(--sp-4);
+      color: var(--wn-green-deep);
+    }
+
+    dd {
+      margin-left: 0;
+      margin-bottom: var(--sp-2);
+    }
+  }
+
+  .placeholder-note {
+    background: var(--wn-mint-100);
+    border-left: 3px solid var(--wn-orange);
+    padding: var(--sp-4);
+    border-radius: var(--r-sm);
+    margin-bottom: var(--sp-5);
+  }
+</style>

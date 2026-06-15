@@ -1,0 +1,69 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import logoSrc from '../assets/logo.svg';
+import '../styles/colors_and_type.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Wunschnachbarn Bonn eG – Gemeinschaft am Klufterbach',
+  description = 'Wohngenossenschaft in Bonn. Wir bauen gemeinsam nachhaltigen, bezahlbaren Wohnraum.'
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+
+    {/*
+      Enable client-side routing with view transitions.
+      This gives SPA-style navigation without losing static HTML.
+    */}
+    <ClientRouter />
+  </head>
+
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  /* Smooth scrolling for anchor links */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus-visible ensures focus rings only show on keyboard navigation */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Skip link for a11y */
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: var(--sp-5);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--wn-green-deep);
+    color: var(--wn-paper);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--r-sm);
+    z-index: 9999;
+    transition: top var(--dur-2) var(--ease-out);
+  }
+  .skip-link:focus {
+    top: var(--sp-5);
+  }
+</style>

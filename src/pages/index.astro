@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import Footer from '../components/Footer.astro';
+import KlufterbachNav from '../components/KlufterbachNav.svelte';
+---
+
+<Base title="Wunschnachbarn Bonn eG – Gemeinschaft am Klufterbach">
+  <KlufterbachNav client:load />
+
+  <!-- Scroll sections will be added in Phase 4 -->
+  <main id="main">
+    <section class="scroll-sections-placeholder">
+      <p>
+        Scrollbare Sektionen folgen in Phase 4
+      </p>
+    </section>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  main {
+    min-height: 50vh;
+  }
+
+  .scroll-sections-placeholder {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--sp-10) var(--sp-5);
+    text-align: center;
+    font-style: italic;
+    color: var(--fg-soft);
+  }
+</style>
