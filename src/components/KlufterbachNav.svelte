@@ -82,8 +82,9 @@
   const hasActiveStation = $derived(activeStationId !== null);
 
   // Computed: should be in compact mode?
-  // Compact if: (has active content box) OR (on /blog* routes) OR (scrolled past hero on home)
+  // Compact if: (is mobile) OR (has active content box) OR (on /blog* routes) OR (scrolled past hero on home)
   const isCompact = $derived(
+    isMobile ||
     hasActiveStation ||
     currentRoute.startsWith('/blog') ||
     (currentRoute === '/' && scrollY > 400)
@@ -183,7 +184,7 @@
 
   // Compute station positions from SVG path
   function computeStationPositions() {
-    if (!pathEl || isMobile) return;
+    if (!pathEl) return;
 
     const totalLength = pathEl.getTotalLength();
     stations = STATIONS.map(s => {
@@ -203,11 +204,21 @@
     currentRoute = window.location.pathname;
 
     checkMobile();
-    computeStationPositions();
+    // Wait for next tick to ensure pathEl is available
+    requestAnimationFrame(() => {
+      computeStationPositions();
+    });
 
     // Listen for resize for mobile breakpoint
     const mediaQuery = window.matchMedia("(max-width: 820px)");
-    mediaQuery.addEventListener("change", checkMobile);
+    const handleResize = () => {
+      checkMobile();
+      // Recompute positions when breakpoint changes
+      requestAnimationFrame(() => {
+        computeStationPositions();
+      });
+    };
+    mediaQuery.addEventListener("change", handleResize);
 
     // Listen for scroll (only on home page)
     if (currentRoute === '/') {
@@ -239,7 +250,7 @@
 
     // Cleanup
     return () => {
-      mediaQuery.removeEventListener("change", checkMobile);
+      mediaQuery.removeEventListener("change", handleResize);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('scroll', updateScrollspy);
       window.removeEventListener('popstate', handleRouteChange);
@@ -310,8 +321,8 @@
           type="button"
           class="klu-station"
           class:active={activeScrollSection === station.id && !station.isRoute}
-          style:left={!isMobile && isCompact ? `${(i / (STATIONS.length - 1)) * 84 + 8}%` : `${(station.x / 1280) * 100}%`}
-          style:top={!isMobile && isCompact ? "50%" : `${(station.y / 720) * 100}%`}
+          style:left={isCompact ? `${(i / (STATIONS.length - 1)) * 84 + 8}%` : `${(station.x / 1280) * 100}%`}
+          style:top={isCompact ? "50%" : `${(station.y / 720) * 100}%`}
           aria-expanded={activeStationId === station.id}
           aria-controls={!station.isRoute ? `panel-${station.id}` : undefined}
           onclick={() => handleStationClick(station.id)}
@@ -603,19 +614,48 @@
     min-height: 400px;
   }
 
-  /* Mobile responsive (will refine in Phase 5) */
+  /* Mobile responsive — compact mode only on ≤ 820px */
   @media (max-width: 820px) {
+    /* Compact mode strip at top */
     .klu-river {
-      height: 100vh;
-      min-height: 100vh;
+      height: 60px;
+      min-height: 60px;
     }
 
+    .klu-band path.river {
+      stroke-width: 22;
+    }
+
+    .klu-band path.river-shadow {
+      stroke-width: 22;
+      opacity: 0;
+    }
+
+    /* Hide headline, subline, and texture on mobile */
+    .klu-headline,
+    .klu-subline {
+      display: none;
+    }
+
+    .klu-river::after {
+      display: none;
+    }
+
+    /* Stations on mobile */
     .klu-station {
       gap: 8px;
     }
 
     .klu-station .label {
-      font-size: 16px;
+      font-size: 14px;
+      padding: 4px 10px;
+      background: rgba(174, 26, 110, 0.8);
+      white-space: nowrap;
+    }
+
+    /* Hide content box on mobile — prose sections only */
+    .klu-content {
+      display: none;
     }
   }
 </style>
