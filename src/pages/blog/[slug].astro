@@ -1,10 +1,22 @@
 ---
+import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import Footer from '../../components/Footer.astro';
 import KlufterbachNav from '../../components/KlufterbachNav.svelte';
+import Footer from '../../components/Footer.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', p => !p.data.draft);
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
 ---
 
-<Base title="Die Heizungsfrage ist (fast) entschieden – Wunschnachbarn Bonn eG">
+<Base title={`${post.data.title} – Wunschnachbarn Bonn eG`}>
   <KlufterbachNav client:load transition:persist="klufterbach-nav" />
 
   <main id="main">
@@ -13,39 +25,15 @@ import KlufterbachNav from '../../components/KlufterbachNav.svelte';
         <a href="/blog" class="back-link">← Zurück zur Übersicht</a>
 
         <div class="post-meta">
-          <time class="post-date">28. Februar 2026</time>
-          <span class="post-category">Bauphase</span>
+          <time class="post-date">{post.data.date.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</time>
+          <span class="post-category">{post.data.category}</span>
         </div>
 
-        <h1>Die Heizungsfrage ist (fast) entschieden</h1>
+        <h1>{post.data.title}</h1>
       </header>
 
       <div class="post-content">
-        <p>Eine unserer wichtigsten technischen Entscheidungen steht vor dem Abschluss: Wie heizen wir unsere zwei Bestandsgebäude energieeffizient?</p>
-
-        <p>Nach Monaten der Beratung, der Berechnungen und der Besuche bei ähnlichen Projekten haben wir eine Lösung gefunden, die unsere ökologischen und ökonomischen Ziele in Einklang bringt.</p>
-
-        <h3>Die Komponenten</h3>
-
-        <p>Unsere Entscheidung fiel auf eine Wärmepumpe in Kombination mit einem großen Pufferspeicher und einer Photovoltaikanlage auf dem Dach.</p>
-
-        <p><strong>Wärmepumpe:</strong> Wir setzen auf eine Luft-Wasser-Wärmepumpe mit guter Jahresarbeitszahl. Sie nutzt die Umgebungswärme und arbeitet mit Strom.</p>
-
-        <p><strong>Pufferspeicher:</strong> Ein 1000-Liter-Speicher puffert die Wärme und ermöglicht es uns, auch Zeiten mit günstigen Stromtarifen optimal zu nutzen.</p>
-
-        <p><strong>Photovoltaik:</strong> 15 kWp auf dem Dach produzieren in den nächsten Jahren fast so viel Strom, wie die Wärmepumpe verbraucht. Der Überschuss fließt ins Netz bzw. in eventuelle spätere Batteriespeicher.</p>
-
-        <h3>Die Zahlen</h3>
-
-        <p>Unsere Berechnungen zeigen, dass wir den Wärmebedarf der Bestandsgebäude nach dem Umbau zu etwa 60% aus selbst erzeugtem Solarstrom decken können. Die restlichen 40% beziehen wir zu günstigen Tarifen.</p>
-
-        <p>Das bedeutet: Unsere Heizkosten werden deutlich niedriger als bei konventionellen Lösungen — und der CO₂-Fußabdruck ist minimal.</p>
-
-        <h3>Was noch fehlt</h3>
-
-        <p>Die Entscheidung ist final, aber die Umsetzung steht bevor. Wir müssen noch die genaue Auslegung der Anlage planen, Förderanträge einreichen und mit den Handwerkern die Details klären.</p>
-
-        <p>Ein spannender Abschnitt unseres Projekts beginnt. Wir halten euch auf dem Laufenden!</p>
+        <Content />
       </div>
 
       <footer class="post-footer">

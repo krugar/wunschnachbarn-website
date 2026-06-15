@@ -3,55 +3,24 @@ import Base from '../../layouts/Base.astro';
 import Footer from '../../components/Footer.astro';
 import KlufterbachNav from '../../components/KlufterbachNav.svelte';
 import BlogList from '../../components/BlogList.svelte';
+import { getCollection } from 'astro:content';
 
-// Seed blog posts (will come from CMS in Phase 7)
-const seedPosts = [
-  {
-    id: 1,
-    slug: 'konsent-entscheid-laerschutz',
-    date: '12. März 2026',
-    category: 'Plenum',
-    title: 'Was uns ein Konsent-Entscheid über Lärmschutz beibrachte',
-    excerpt: 'Wir haben drei Plenen gebraucht. Am Ende war die Lösung kleiner als der Streit.',
-    heroImage: null, // Placeholder
-  },
-  {
-    id: 2,
-    slug: 'heizungsfrage-entschieden',
-    date: '28. Februar 2026',
-    category: 'Bauphase',
-    title: 'Die Heizungsfrage ist (fast) entschieden',
-    excerpt: 'Wärmepumpe plus Pufferspeicher plus PV — die Zahlen sehen gut aus. Was noch fehlt.',
-    heroImage: null,
-  },
-  {
-    id: 3,
-    slug: 'drehbank-vorfach',
-    date: '10. Februar 2026',
-    category: 'Werkstatt',
-    title: 'Wir haben eine alte Drehbank geerbt',
-    excerpt: 'Sie steht im Keller und wartet. Werkstattkreis sucht Menschen, die Lust auf Metall haben.',
-    heroImage: null,
-  },
-  {
-    id: 4,
-    slug: 'mistbeet-januar',
-    date: '31. Januar 2026',
-    category: 'Garten',
-    title: 'Mistbeet bauen, im Januar',
-    excerpt: 'Vier Paletten, ein Sack Pferdemist, drei Stunden. Mehr brauchte es nicht.',
-    heroImage: null,
-  },
-  {
-    id: 5,
-    slug: 'keine-mehrheitsentscheidungen',
-    date: '18. Januar 2026',
-    category: 'Soziokratie',
-    title: 'Warum wir keine Mehrheitsentscheidungen treffen',
-    excerpt: 'Konsent ist nicht Konsens. Eine kurze Einführung für Interessierte.',
-    heroImage: null,
-  },
-];
+// Get blog posts from CMS
+const posts = await getCollection('posts', p => !p.data.draft);
+
+// Map posts to the format expected by BlogList
+const blogListPosts = posts.map((post, index) => ({
+  id: index + 1, // Use numeric ID for BlogList compatibility
+  slug: post.id,
+  date: post.data.date.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }),
+  category: post.data.category,
+  title: post.data.title,
+  excerpt: post.data.excerpt,
+  heroImage: null, // Empty for v1
+}));
+
+// Sort by date (newest first)
+blogListPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 const categories = ['Alle', 'Plenum', 'Bauphase', 'Werkstatt', 'Garten', 'Soziokratie'];
 ---
@@ -70,7 +39,7 @@ const categories = ['Alle', 'Plenum', 'Bauphase', 'Werkstatt', 'Garten', 'Soziok
       </header>
 
       <BlogList
-        posts={seedPosts}
+        posts={blogListPosts}
         categories={categories}
         client:load
       />
