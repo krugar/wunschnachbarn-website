@@ -71,6 +71,9 @@
   // State: current route (for compact state on /blog*)
   let currentRoute = $state(typeof window !== 'undefined' ? window.location.pathname : '/');
 
+  // State: which prose section is currently in view (for scrollspy)
+  let activeScrollSection = $state<string | null>(null);
+
   // Refs
   let pathEl: SVGPathElement | null = null;
   let pageEl: HTMLElement | null = null;
@@ -103,6 +106,37 @@
     if (activeStationId && !newRoute.startsWith('/blog')) {
       window.history.replaceState(null, '', `#${activeStationId}`);
     }
+
+    // Reset scrollspy active section
+    activeScrollSection = null;
+  }
+
+  // Scrollspy: detect which prose section is in view
+  function updateScrollspy() {
+    if (!isCompact || currentRoute !== '/') return;
+
+    const sections = document.querySelectorAll('.section-prose');
+    let currentSection: string | null = null;
+    let minDistance = Infinity;
+
+    sections.forEach((section) => {
+      const rect = section.getBoundingClientRect();
+      const distance = Math.abs(rect.top);
+
+      // Consider section "active" if it's within 40% of viewport
+      if (rect.top <= window.innerHeight * 0.4 && rect.bottom >= 0) {
+        const sectionId = section.id;
+        // Find the closest section within the active zone
+        if (distance < minDistance) {
+          minDistance = distance;
+          currentSection = sectionId;
+        }
+      }
+    });
+
+    if (currentSection) {
+      activeScrollSection = currentSection;
+    }
   }
 
   // Handle station click
@@ -116,7 +150,18 @@
       return;
     }
 
-    // Static stations: toggle content box
+    // In compact mode: scroll to prose section
+    if (isCompact) {
+      const section = document.getElementById(stationId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+        // Update URL hash
+        window.history.replaceState(null, '', `#${stationId}`);
+      }
+      return;
+    }
+
+    // In hero mode: toggle content box
     if (activeStationId === stationId) {
       activeStationId = null; // Close if already open
     } else {
@@ -160,6 +205,7 @@
     // Listen for scroll (only on home page)
     if (currentRoute === '/') {
       window.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('scroll', updateScrollspy, { passive: true });
     }
 
     // Listen for route changes (View Transitions navigation)
@@ -188,6 +234,7 @@
     return () => {
       mediaQuery.removeEventListener("change", checkMobile);
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', updateScrollspy);
       window.removeEventListener('popstate', handleRouteChange);
       window.removeEventListener('astro:page-load', handleRouteChange);
       window.removeEventListener("hashchange", handleHashChange);
@@ -244,6 +291,7 @@
         <button
           type="button"
           class="klu-station"
+          class:active={activeScrollSection === station.id && !station.isRoute}
           style:left={!isMobile && isCompact ? `${(i / (STATIONS.length - 1)) * 84 + 8}%` : `${(station.x / 1280) * 100}%`}
           style:top={!isMobile && isCompact ? "50%" : `${(station.y / 720) * 100}%`}
           aria-expanded={activeStationId === station.id}
@@ -471,6 +519,14 @@
     height: 32px;
     background: var(--wn-orange);
     box-shadow: 0 0 0 4px rgba(220, 109, 18, 0.3);
+  }
+
+  /* Scrollspy active state (compact mode) */
+  .klu-station.active .dot {
+    width: 20px;
+    height: 20px;
+    background: var(--wn-orange);
+    box-shadow: 0 0 0 3px rgba(220, 109, 18, 0.2);
   }
 
   .klu-station .label {
