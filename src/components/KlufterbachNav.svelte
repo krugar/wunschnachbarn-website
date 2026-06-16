@@ -19,17 +19,17 @@
     {
       id: "wir",
       label: "Wir",
-      t: 0.08,
+      t: 0.14,
     },
     {
       id: "projekt",
       label: "Projekt",
-      t: 0.22,
+      t: 0.26,
     },
     {
       id: "ziele",
       label: "Ziele",
-      t: 0.38,
+      t: 0.40,
     },
     {
       id: "blog",
@@ -52,8 +52,9 @@
 
   // CORRECTED river path from handoff: top-left → bottom-right descent
   // Original prototype path: "M -50 240 Q 320 420 640 320 T 1330 400"
-  const RIVER_D = "M -60 120 Q 360 230 660 360 T 1340 640";
-
+  // flipped: "M -60 120 Q 360 230 660 360 T 1340 640";
+  // manually adjusted:
+  const RIVER_D = "M -53,234 C 219,709 863,-81 1327,629";
   // State: which content box is open (null = none)
   let activeStationId = $state<string | null>(null);
 
@@ -429,10 +430,9 @@
     content: "";
     position: absolute;
     inset: 0;
-    background-image: url("/assets/design-system/forest-texture.png");
-    background-size: 1200px auto;
-    background-repeat: repeat;
-    opacity: 0.12;
+    background-image: url("src/assets/uploads/forest.webp");
+    background-size: cover;
+    opacity: 0.42;
     pointer-events: none;
     z-index: 0;
     mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 100%);
