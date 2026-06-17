@@ -33,7 +33,7 @@ export interface BandInput {
 }
 
 /** Fraction of the viewport height over which the band shrinks hero→compact (O5). */
-const COMPACT_SCROLL_FRACTION = 0.6;
+const COMPACT_SCROLL_FRACTION = 1.0;
 
 function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n));

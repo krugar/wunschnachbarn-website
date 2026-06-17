@@ -51,9 +51,9 @@ Deno.test('isCompact: any /blog* route is compact', () => {
   assertEquals(isCompact(input({ route: '/blog/some-post' })), true);
 });
 
-Deno.test('isCompact: home + scrolled past 0.6*viewport is compact (R-O5)', () => {
-  assertEquals(isCompact(input({ scrollY: 601 })), true);
-  assertEquals(isCompact(input({ scrollY: 599 })), false);
+Deno.test('isCompact: home + scrolled past 1.0*viewport is compact (R-O5)', () => {
+  assertEquals(isCompact(input({ scrollY: 1001 })), true);
+  assertEquals(isCompact(input({ scrollY: 999 })), false);
 });
 
 Deno.test('isCompact: home at top is hero', () => {
@@ -72,12 +72,12 @@ Deno.test('bandProgress: home at top is 0 (full hero)', () => {
 });
 
 Deno.test('bandProgress: home halfway through the dive distance is 0.5', () => {
-  // distance = 1000 * 0.6 = 600; scrollY 300 -> 0.5
-  assertEquals(bandProgress(input({ scrollY: 300 })), 0.5);
+  // distance = 1000 * 1.0 = 1000; scrollY 500 -> 0.5
+  assertEquals(bandProgress(input({ scrollY: 500 })), 0.5);
 });
 
 Deno.test('bandProgress: home past the dive distance clamps to 1', () => {
-  assertEquals(bandProgress(input({ scrollY: 600 })), 1);
+  assertEquals(bandProgress(input({ scrollY: 1000 })), 1);
   assertEquals(bandProgress(input({ scrollY: 5000 })), 1);
 });
 
@@ -92,8 +92,8 @@ Deno.test('bandProgress: zero viewport height degrades to 1 (no divide-by-zero)'
 });
 
 Deno.test('isCompact tracks the END of the dive (progress >= 1)', () => {
-  assertEquals(isCompact(input({ scrollY: 300 })), false); // mid-dive: still hero behaviour
-  assertEquals(isCompact(input({ scrollY: 600 })), true); // fully shrunk: reading mode
+  assertEquals(isCompact(input({ scrollY: 500 })), false); // mid-dive: still hero behaviour
+  assertEquals(isCompact(input({ scrollY: 1000 })), true); // fully shrunk: reading mode
 });
 
 // --- reduceStationClick -----------------------------------------------------
@@ -123,8 +123,8 @@ Deno.test('R3: hero click on the active station closes the box', () => {
 });
 
 Deno.test('R4: compact section click scroll-jumps, opens no box', () => {
-  // compact via scroll
-  const r = reduceStationClick(SECTION, input({ scrollY: 700 }));
+  // compact via scroll (past full viewport distance)
+  const r = reduceStationClick(SECTION, input({ scrollY: 1001 }));
   assertEquals(r.effect, { kind: 'scrollTo', id: 'projekt' });
   assertEquals(r.activeStationId, null);
 });
