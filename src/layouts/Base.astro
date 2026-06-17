@@ -59,6 +59,7 @@ const sectionData: SectionData[] = sections.map((s) => ({
       transition:persist="klufterbach-nav"
       sections={sectionData}
       textureUrl={bandTexture.src}
+      initialRoute={Astro.url.pathname}
     />
     <slot />
   </body>

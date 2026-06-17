@@ -32,8 +32,12 @@ export interface BandInput {
   activeStationId: StationId | null;
 }
 
-/** Fraction of the viewport height the user must scroll before the band morphs (O5). */
+/** Fraction of the viewport height over which the band shrinks hero→compact (O5). */
 const COMPACT_SCROLL_FRACTION = 0.6;
+
+function clamp01(n: number): number {
+  return Math.min(1, Math.max(0, n));
+}
 
 /** True for the home route (and the degenerate empty path). */
 export function isHomeRoute(route: string): boolean {
@@ -41,19 +45,32 @@ export function isHomeRoute(route: string): boolean {
 }
 
 /**
- * Whether the band should render compact.
+ * Continuous morph progress, 0 (full hero) → 1 (full compact bar). Drives the
+ * "dive into the stream" shrink: the band shrinks as the visitor scrolls.
  *
- * DEFECT-2 FIX: compactness depends ONLY on device/route/scroll — never on
- * whether a content box is open. Opening a hero box must keep the band in hero
- * state (R1). `activeStationId` is intentionally NOT read here.
+ * Only the home route scrubs with scroll; everywhere else the band is fully
+ * compact (1): mobile, any /blog* route, and standalone routes (impressum etc.).
+ */
+export function bandProgress(i: BandInput, fraction = COMPACT_SCROLL_FRACTION): number {
+  if (i.isMobile) return 1;
+  if (!isHomeRoute(i.route)) return 1;
+  const distance = i.viewportH * fraction;
+  return distance > 0 ? clamp01(i.scrollY / distance) : 1;
+}
+
+/**
+ * Whether the band is in compact "reading" mode (behavioural switch: station
+ * clicks scroll to prose instead of opening boxes; an open box closes).
+ *
+ * Compact == fully shrunk (progress 1). Keeping the behavioural threshold at the
+ * end of the dive means the hero click-reveal still works near the top while the
+ * band is mid-shrink.
+ *
+ * DEFECT-2 FIX: depends ONLY on device/route/scroll — never on whether a box is
+ * open. `activeStationId` is intentionally NOT read here.
  */
 export function isCompact(i: BandInput): boolean {
-  const threshold = i.viewportH * COMPACT_SCROLL_FRACTION;
-  return (
-    i.isMobile ||
-    i.route.startsWith('/blog') ||
-    (isHomeRoute(i.route) && i.scrollY > threshold)
-  );
+  return bandProgress(i) >= 1;
 }
 
 /** Side effect a station click asks the component to perform. */

@@ -4,6 +4,7 @@
 
 import { assertEquals } from 'jsr:@std/assert@^1.0.0';
 import {
+  bandProgress,
   isCompact,
   isHomeRoute,
   reduceStationClick,
@@ -62,6 +63,37 @@ Deno.test('isCompact: home at top is hero', () => {
 Deno.test('DEFECT-2 GUARD: an open box must NOT make the band compact', () => {
   // hero, at top, box open -> still hero. This is the bug we are fixing.
   assertEquals(isCompact(input({ activeStationId: 'projekt' })), false);
+});
+
+// --- bandProgress (continuous dive, 0..1) -----------------------------------
+
+Deno.test('bandProgress: home at top is 0 (full hero)', () => {
+  assertEquals(bandProgress(input({ scrollY: 0 })), 0);
+});
+
+Deno.test('bandProgress: home halfway through the dive distance is 0.5', () => {
+  // distance = 1000 * 0.6 = 600; scrollY 300 -> 0.5
+  assertEquals(bandProgress(input({ scrollY: 300 })), 0.5);
+});
+
+Deno.test('bandProgress: home past the dive distance clamps to 1', () => {
+  assertEquals(bandProgress(input({ scrollY: 600 })), 1);
+  assertEquals(bandProgress(input({ scrollY: 5000 })), 1);
+});
+
+Deno.test('bandProgress: mobile, blog, and standalone routes are fully compact (1)', () => {
+  assertEquals(bandProgress(input({ isMobile: true, scrollY: 0 })), 1);
+  assertEquals(bandProgress(input({ route: '/blog', scrollY: 0 })), 1);
+  assertEquals(bandProgress(input({ route: '/impressum', scrollY: 0 })), 1);
+});
+
+Deno.test('bandProgress: zero viewport height degrades to 1 (no divide-by-zero)', () => {
+  assertEquals(bandProgress(input({ viewportH: 0, scrollY: 0 })), 1);
+});
+
+Deno.test('isCompact tracks the END of the dive (progress >= 1)', () => {
+  assertEquals(isCompact(input({ scrollY: 300 })), false); // mid-dive: still hero behaviour
+  assertEquals(isCompact(input({ scrollY: 600 })), true); // fully shrunk: reading mode
 });
 
 // --- reduceStationClick -----------------------------------------------------

@@ -3,6 +3,7 @@
   import { navigate } from 'astro:transitions/client';
   import SectionBox from './SectionBox.svelte';
   import {
+    bandProgress,
     isCompact as computeCompact,
     isHomeRoute,
     reduceStationClick,
@@ -12,6 +13,9 @@
     type StationDef,
     type StationId,
   } from '../lib/band-state';
+
+  /** Linear interpolation, for scrubbing station positions during the dive. */
+  const mix = (a: number, b: number, t: number): number => a + (b - a) * t;
 
   // View-model types shared with SectionBox. Content (bodyHtml) is pre-rendered
   // server-side by the shell and passed as a string — the client never parses
@@ -32,8 +36,9 @@
   interface Props {
     sections: SectionData[]; // O2 — typed, supplied by the shell, used only on '/'
     textureUrl: string; // O3 — resolved at build time by the shell
+    initialRoute: string; // current path at SSR, so first paint matches the route
   }
-  let { sections, textureUrl }: Props = $props();
+  let { sections, textureUrl, initialRoute }: Props = $props();
 
   // Structural station definitions. Order + path position only; labels prefer the
   // CMS value (sections prop) and fall back to these defaults. (D3: `kind`.)
@@ -54,8 +59,10 @@
   let stations = $state(STATIONS.map((s) => ({ ...s, x: 0, y: 0 })));
   let isMobile = $state(false);
   let scrollY = $state(0);
-  let viewportH = $state(0);
-  let route = $state('/');
+  // Nonzero default so the pre-hydration render computes progress 0 (full hero)
+  // on home instead of dividing by zero → compact flash. Replaced on mount.
+  let viewportH = $state(800);
+  let route = $state(initialRoute);
   let activeScrollSection = $state<string | null>(null);
 
   // Refs
@@ -70,6 +77,9 @@
     activeStationId,
   });
   const compact = $derived(computeCompact(bandInput));
+  // Continuous 0..1 morph progress (the "dive"): drives all band visuals so the
+  // shrink tracks scroll instead of snapping at a threshold (Option B).
+  const progress = $derived(bandProgress(bandInput));
   const activeSection = $derived(
     activeStationId ? sections.find((s) => s.id === activeStationId) ?? null : null,
   );
@@ -214,7 +224,7 @@
 
 <div
   class="klu-page"
-  data-compact={compact ? 'true' : 'false'}
+  style:--klu-progress={progress}
   style:--klu-texture-url={`url(${textureUrl})`}
 >
   <a href="#main" class="klu-skip">Zum Inhalt springen</a>
@@ -249,12 +259,18 @@
           <stop offset="1" stop-color="#931558" />
         </linearGradient>
       </defs>
-      <path class="river-shadow" d={RIVER_D} />
+      <path
+        class="river-shadow"
+        d={RIVER_D}
+        style:stroke-width={mix(96, isMobile ? 22 : 38, progress)}
+        style:opacity={1 - progress}
+      />
       <path
         class="river"
         bind:this={pathEl}
         d={RIVER_D}
         stroke="url(#klu-grad)"
+        style:stroke-width={mix(96, isMobile ? 22 : 38, progress)}
       />
     </svg>
 
@@ -276,8 +292,8 @@
           type="button"
           class="klu-station"
           class:active={activeScrollSection === station.id && station.kind === 'section'}
-          style:left={compact ? `${(i / (STATIONS.length - 1)) * 84 + 8}%` : `${(station.x / 1280) * 100}%`}
-          style:top={compact ? '50%' : `${(station.y / 720) * 100}%`}
+          style:left={`${mix((station.x / 1280) * 100, (i / (STATIONS.length - 1)) * 84 + 8, progress)}%`}
+          style:top={`${mix((station.y / 720) * 100, 50, progress)}%`}
           aria-expanded={station.kind === 'section' ? activeStationId === station.id : undefined}
           aria-controls={station.kind === 'section' ? `panel-${station.id}` : undefined}
           onclick={() => handleStationClick(station.id)}
@@ -366,20 +382,23 @@
     white-space: nowrap;
   }
 
-  /* River strip (morphs from full-page S to header bar) */
+  /* River strip: a sticky bar whose height is scrubbed by --klu-progress
+     (0 = full-page hero S, 1 = slim sticky top bar). The "dive". */
   .klu-river {
-    position: relative;
-    height: 720px;
-    min-height: 720px;
-    transition: height 420ms var(--ease-in-out),
-                min-height 420ms var(--ease-in-out);
+    --hero-h: 720px;
+    --compact-h: 110px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--wn-paper);
+    height: calc(var(--hero-h) - (var(--hero-h) - var(--compact-h)) * var(--klu-progress, 0));
+    min-height: var(--compact-h);
     overflow: hidden;
     isolation: isolate;
-  }
-
-  .klu-page[data-compact="true"] .klu-river {
-    height: 110px;
-    min-height: 110px;
+    box-shadow: 0 calc(2px * var(--klu-progress, 0)) calc(10px * var(--klu-progress, 0))
+      rgba(0, 0, 0, calc(0.08 * var(--klu-progress, 0)));
+    /* Short transition smooths route-change morphs without lagging scroll. */
+    transition: height 150ms var(--ease-out);
   }
 
   .klu-river::after {
@@ -388,16 +407,11 @@
     inset: 0;
     background-image: var(--klu-texture-url, none);
     background-size: cover;
-    opacity: 0.42;
+    opacity: calc(0.42 * (1 - var(--klu-progress, 0)));
     pointer-events: none;
     z-index: 0;
     mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 100%);
     -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 100%);
-    transition: opacity 420ms var(--ease-in-out);
-  }
-
-  .klu-page[data-compact="true"] .klu-river::after {
-    opacity: 0;
   }
 
   /* SVG river */
@@ -410,35 +424,25 @@
     z-index: 1;
   }
 
+  /* stroke-width + shadow opacity are scrubbed inline by --klu-progress. */
   .klu-band path.river {
     fill: none;
     stroke: var(--wn-violet);
-    stroke-width: 96;
     stroke-linecap: round;
     filter: url(#klu-soft);
     opacity: 0.92;
     vector-effect: non-scaling-stroke;
-    transition: stroke-width 420ms var(--ease-in-out);
+    transition: stroke-width 150ms var(--ease-out);
   }
 
   .klu-band path.river-shadow {
     fill: none;
     stroke: rgba(0, 0, 0, 0.15);
-    stroke-width: 96;
     stroke-linecap: round;
     vector-effect: non-scaling-stroke;
     transform: translateY(4px);
-    transition: stroke-width 420ms var(--ease-in-out),
-                opacity 320ms var(--ease-out);
-  }
-
-  .klu-page[data-compact="true"] .klu-band path.river {
-    stroke-width: 38;
-  }
-
-  .klu-page[data-compact="true"] .klu-band path.river-shadow {
-    stroke-width: 38;
-    opacity: 0;
+    transition: stroke-width 150ms var(--ease-out),
+                opacity 150ms var(--ease-out);
   }
 
   /* Headline + subline */
@@ -449,8 +453,10 @@
     max-width: 11ch;
     z-index: 3;
     pointer-events: none;
-    transition: opacity 320ms var(--ease-out),
-                transform 420ms var(--ease-in-out);
+    opacity: calc(1 - var(--klu-progress, 0));
+    transform: translateY(calc(-12px * var(--klu-progress, 0)));
+    transition: opacity 150ms var(--ease-out),
+                transform 150ms var(--ease-out);
   }
 
   .klu-headline .eyebrow {
@@ -479,19 +485,16 @@
     transition: opacity 320ms var(--ease-out);
   }
 
+  .klu-subline {
+    opacity: calc(1 - var(--klu-progress, 0));
+  }
+
   .klu-subline p {
     font-size: 17px;
     line-height: 1.5;
     color: var(--wn-green-forest);
     margin: 0;
     font-weight: 500;
-  }
-
-  .klu-page[data-compact="true"] .klu-headline,
-  .klu-page[data-compact="true"] .klu-subline {
-    opacity: 0;
-    transform: translateY(-12px);
-    pointer-events: none;
   }
 
   /* Stations */
@@ -571,19 +574,10 @@
 
   /* Mobile responsive — compact mode only on ≤ 820px */
   @media (max-width: 820px) {
-    /* Compact mode strip at top */
+    /* Mobile is always fully compact (progress = 1): a 60px strip. */
     .klu-river {
-      height: 60px;
-      min-height: 60px;
-    }
-
-    .klu-band path.river {
-      stroke-width: 22;
-    }
-
-    .klu-band path.river-shadow {
-      stroke-width: 22;
-      opacity: 0;
+      --hero-h: 60px;
+      --compact-h: 60px;
     }
 
     /* Hide headline, subline, and texture on mobile */
