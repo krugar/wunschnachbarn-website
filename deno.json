@@ -1,0 +1,15 @@
+{
+  "//": "==========================================================================",
+  "//1": "TEMPORARY-DENO — Deno test infrastructure for Scope A cleanup ONLY.",
+  "//2": "This project is Node/pnpm/Astro. Deno runs here SOLELY to unit-test the",
+  "//3": "dependency-free pure module src/lib/band-state.ts without a browser.",
+  "//4": "It does NOT type-check or run any Astro/Svelte code.",
+  "//5": "MIGRATION TO VITEST: delete this file, swap the std/assert imports in",
+  "//6": "tests/*.test.ts for vitest's expect, add vitest devDep + vitest.config.ts.",
+  "//7": "Grep the repo for 'TEMPORARY-DENO' to find every touchpoint.",
+  "//8": "==========================================================================",
+  "_temporary": "TEMPORARY-DENO — see DESIGN_band-and-shell.md §6 and §8",
+  "tasks": {
+    "test": "deno test --allow-read"
+  }
+}
