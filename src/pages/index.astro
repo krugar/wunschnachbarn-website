@@ -1,51 +1,24 @@
 ---
 import Base from '../layouts/Base.astro';
 import Footer from '../components/Footer.astro';
-import KlufterbachNav from '../components/KlufterbachNav.svelte';
-import { getCollection, getEntry } from 'astro:content';
-import { render } from 'astro:content';
+import { getCollection } from 'astro:content';
 
-// Get sections from CMS, sorted by order
-const sections = await getCollection('sections');
-sections.sort((a, b) => a.data.order - b.data.order);
-
-// Get site meta for contact email
-const siteMetaEntry = await getEntry('site', 'meta');
-const contactEmail = siteMetaEntry?.data.email || 'mitmachen@wunschnachbarn.org';
-
-// Render sections in the frontmatter for access in template
-const renderedSections = await Promise.all(
-  sections.map(async (section) => ({
-    section,
-    Content: (await render(section)).Content,
-  }))
-);
+// The prose page is the SEO / screen-reader source of truth (HANDOFF §4.3).
+// It renders the SAME server-rendered markdown the band's hero box uses (R7).
+// The band itself is mounted once in Base.astro — not here.
+const sections = (await getCollection('sections')).sort((a, b) => a.data.order - b.data.order);
 ---
 
 <Base title="Wunschnachbarn Bonn eG – Gemeinschaft am Klufterbach">
-  <KlufterbachNav client:load transition:persist="klufterbach-nav" />
-
   <main id="main">
     <article class="scroll-sections">
-      {renderedSections.map(({ section, Content }) => (
+      {sections.map((section) => (
         <section id={section.id} class="section-prose">
           <header class="section-header">
             <span class="eyebrow">{section.data.label}</span>
             <h2 set:html={section.data.title}></h2>
           </header>
-          <div class="section-body">
-            {section.id === 'kontakt' ? (
-              <>
-                <p>Bewende dich gerne per Mail an uns. Wir freuen uns über Dein Interesse.</p>
-                <p style="font-family: var(--ff-mono); font-size: 14px; opacity: 0.8; word-break: break-all;">
-                  {contactEmail}
-                </p>
-                <a class="cta" href={`mailto:${contactEmail}`}>Per Mail schreiben →</a>
-              </>
-            ) : (
-              <Content client:load />
-            )}
-          </div>
+          <div class="section-body" set:html={section.rendered?.html ?? ''}></div>
         </section>
       ))}
     </article>

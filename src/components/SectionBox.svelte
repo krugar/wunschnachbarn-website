@@ -1,108 +1,55 @@
 <script lang="ts">
-  import type { Station } from './KlufterbachNav.svelte';
+  import type { Item } from './KlufterbachNav.svelte';
+  // Brand backdrop for the empty-state photo card is served from public/
+  // (/assets/design-system/forest-texture.png) — same stable path used by
+  // colors_and_type.css and BlogList. (R13: fixes the 404 design-system texture.)
 
+  // Presentational only. Receives pre-rendered content; owns layout/style, not copy.
+  // (SPEC R7 single source, R14 items[], R16 placement.)
   interface Props {
-    station: Station;
+    id: string;
+    label: string;
+    title: string;
+    items: Item[];
+    placement?: 'below' | 'upper-right' | 'lower-left'; // R16 — reserved; only 'below' active
     onClose: () => void;
   }
 
-  let { station, onClose }: Props = $props();
+  let { id, label, title, items, placement = 'below', onClose }: Props = $props();
 
-  // Placeholder content for each station (will come from CMS later)
-  const stationContent = $derived(
-    {
-      wir: {
-        title: "Wir Wunschnachbarn",
-        photoCaption: "Foto · Gruppe",
-        body: `
-          <p>
-            Eine bunte Gruppe aus Singles, Paaren, Familien, Senior:innen
-            und Kindern, die ihr gemeinsames Ziel einer nachhaltigen,
-            gemeinschaftlichen Lebensweise in Bonn umsetzen möchten.
-          </p>
-          <p>
-            Seit September 2020 unterwegs. Aktuell 20 Wunschnachbarn — wir
-            wachsen auf etwa 40.
-          </p>
-        `,
-      },
-      projekt: {
-        title: "Zwei Bestandsgebäude",
-        photoCaption: "Foto · Gebäude",
-        body: `
-          <p>
-            Hanglage in Bonn, gute Anbindung an öffentliche Verkehrsmittel.
-            Über die Bundesstraße 9 schnell zur Autobahn und in die
-            umliegenden Orte. Wir bauen energieeffizient um — bezahlbar,
-            nachhaltig, gemeinsam.
-          </p>
-        `,
-      },
-      ziele: {
-        title: "Bezahlbar & nachhaltig",
-        photoCaption: "Foto · Garten",
-        body: `
-          <ul>
-            <li>Genossenschaft als Trägerin von bezahlbarem Wohnraum.</li>
-            <li>Energieeffizienter Umbau, erneuerbare Energien.</li>
-            <li>Gemeinschaftliche Nutzung von Räumen, Geräten, Fahrzeugen.</li>
-            <li>Vernetzung im Stadtteil — Werkstätten, Coworking, Veranstaltungen.</li>
-          </ul>
-        `,
-      },
-      termine: {
-        title: "Aktuell pausiert",
-        photoCaption: "Foto · Infoabend",
-        body: `
-          <p>
-            Aufgrund der sehr hohen Anzahl an Anfragen halten wir die
-            Anwerbung neuer Wunschnachbarn vorerst aus.
-          </p>
-          <p>
-            Wir sind aber weiterhin sehr interessiert, Dich kennenzulernen
-            und werden zu gegebener Zeit neue Termine hier veröffentlichen.
-          </p>
-        `,
-      },
-      kontakt: {
-        title: "Schreib uns.",
-        photoCaption: "Foto · Briefkasten",
-        body: `
-          <p>
-            Bei Fragen wende Dich gerne per Mail an uns. Wir freuen uns über
-            Dein Interesse.
-          </p>
-          <p style="font-family: var(--ff-mono); font-size: 12px; opacity: 0.8; word-break: break-all;">
-            mitmachen@wunschnachbarn.org
-          </p>
-          <a class="cta" href="mailto:mitmachen@wunschnachbarn.org">
-            Per Mail schreiben →
-          </a>
-        `,
-      },
-    }[station.id as keyof typeof stationContent] || { title: station.label, photoCaption: "Foto", body: "<p>Inhalt folgt.</p>" }
-  );
+  // First item's image fronts the photo card (single image+text today; multi-item
+  // layout is deferred with the CMS items schema — SPEC §8).
+  const photo = $derived(items.find((i) => i.image));
 </script>
 
 <div
-  id="panel-{station.id}"
+  id="panel-{id}"
   class="klu-panel-pair"
+  data-placement={placement}
   role="region"
-  aria-labelledby="panel-{station.id}-title"
+  aria-labelledby="panel-{id}-title"
 >
   <div class="klu-card">
     <button class="close" aria-label="Schließen" onclick={onClose}>×</button>
-    <span class="eyebrow">{station.label}</span>
-    <h2 id="panel-{station.id}-title">{stationContent.title}</h2>
+    <span class="eyebrow">{label}</span>
+    <h2 id="panel-{id}-title">{title}</h2>
     <div class="body-content">
-      {@html stationContent.body}
+      {#each items as item, i (i)}
+        {#if item.heading}<h3>{item.heading}</h3>{/if}
+        <!-- bodyHtml is server-rendered markdown from the CMS (no client parser) -->
+        {@html item.bodyHtml}
+      {/each}
     </div>
   </div>
-  <div class="klu-photo" data-photo-slot-id="photo-{station.id}" aria-hidden="true">
-    <div class="placeholder">
-      <span class="kind">{stationContent.photoCaption}</span>
-      <span class="hint">Bild folgt</span>
-    </div>
+  <div class="klu-photo" data-photo-slot-id="photo-{id}">
+    {#if photo}
+      <img src={photo.image} alt={photo.imageAlt ?? ''} loading="lazy" />
+    {:else}
+      <div class="placeholder" aria-hidden="true">
+        <span class="kind">{label}</span>
+        <span class="hint">Bild folgt</span>
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -191,43 +138,32 @@
     color: rgba(247, 246, 241, 0.9);
   }
 
-  .klu-card .body-content p {
+  .klu-card .body-content :global(p) {
     margin-bottom: 1em;
   }
 
-  .klu-card .body-content ul {
+  .klu-card .body-content :global(ul) {
     padding-left: var(--sp-5);
     margin: 0 0 1em;
   }
 
-  .klu-card .body-content li {
+  .klu-card .body-content :global(li) {
     margin-bottom: var(--sp-2);
   }
 
-  .klu-card .cta {
-    display: inline-flex;
-    align-items: center;
-    padding: var(--sp-3) var(--sp-5);
-    background: var(--wn-violet);
-    color: var(--wn-paper);
-    text-decoration: none;
-    border-radius: var(--r-pill);
-    font-weight: 600;
-    transition: background var(--dur-2) var(--ease-out),
-                transform var(--dur-1) var(--ease-out);
+  .klu-card .body-content :global(a) {
+    color: var(--wn-violet-soft);
+    word-break: break-all;
   }
 
-  .klu-card .cta:hover {
-    background: #931558;
-  }
-
-  .klu-card .cta:active {
-    transform: scale(0.97);
+  .klu-card .body-content :global(h3) {
+    font-size: var(--fs-h4);
+    margin: var(--sp-4) 0 var(--sp-2);
   }
 
   .klu-photo {
     flex: 1;
-    background: var(--wn-mint-200);
+    background-color: var(--wn-mint-200);
     background-image: url("/assets/design-system/forest-texture.png");
     background-size: 700px auto;
     background-repeat: repeat;
@@ -238,6 +174,12 @@
     justify-content: center;
     min-height: 300px;
     overflow: hidden;
+  }
+
+  .klu-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .klu-photo .placeholder {

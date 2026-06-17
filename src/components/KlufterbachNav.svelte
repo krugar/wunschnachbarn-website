@@ -2,270 +2,224 @@
   import { onMount } from 'svelte';
   import { navigate } from 'astro:transitions/client';
   import SectionBox from './SectionBox.svelte';
+  import {
+    isCompact as computeCompact,
+    isHomeRoute,
+    reduceStationClick,
+    reconcileOnCompactChange,
+    type BandInput,
+    type ClickEffect,
+    type StationDef,
+    type StationId,
+  } from '../lib/band-state';
 
-  // Type definition for stations
-  export type Station = {
-    id: string;
+  // View-model types shared with SectionBox. Content (bodyHtml) is pre-rendered
+  // server-side by the shell and passed as a string — the client never parses
+  // markdown (SPEC R15). Single source of truth with the prose (SPEC R7).
+  export interface Item {
+    bodyHtml: string;
+    image?: string;
+    imageAlt?: string;
+    heading?: string;
+  }
+  export interface SectionData {
+    id: StationId;
     label: string;
-    t: number;
-    x?: number;
-    y?: number;
-    isRoute?: boolean;
-    route?: string;
-  };
+    title: string;
+    items: Item[];
+  }
 
-  // Station definitions — same as prototype but adjusted for Svelte 5
-  const STATIONS: Station[] = [
-    {
-      id: "wir",
-      label: "Wir",
-      t: 0.14,
-    },
-    {
-      id: "projekt",
-      label: "Projekt",
-      t: 0.26,
-    },
-    {
-      id: "ziele",
-      label: "Ziele",
-      t: 0.40,
-    },
-    {
-      id: "blog",
-      label: "Blog",
-      t: 0.55,
-      isRoute: true,
-      route: "/blog",
-    },
-    {
-      id: "termine",
-      label: "Termine",
-      t: 0.72,
-    },
-    {
-      id: "kontakt",
-      label: "Kontakt",
-      t: 0.89,
-    },
+  interface Props {
+    sections: SectionData[]; // O2 — typed, supplied by the shell, used only on '/'
+    textureUrl: string; // O3 — resolved at build time by the shell
+  }
+  let { sections, textureUrl }: Props = $props();
+
+  // Structural station definitions. Order + path position only; labels prefer the
+  // CMS value (sections prop) and fall back to these defaults. (D3: `kind`.)
+  const STATIONS: StationDef[] = [
+    { id: 'wir', label: 'Wir', t: 0.14, kind: 'section' },
+    { id: 'projekt', label: 'Projekt', t: 0.26, kind: 'section' },
+    { id: 'ziele', label: 'Ziele', t: 0.4, kind: 'section' },
+    { id: 'blog', label: 'Blog', t: 0.55, kind: 'route', route: '/blog' },
+    { id: 'termine', label: 'Termine', t: 0.72, kind: 'section' },
+    { id: 'kontakt', label: 'Kontakt', t: 0.89, kind: 'section' },
   ];
 
-  // CORRECTED river path from handoff: top-left → bottom-right descent
-  // Original prototype path: "M -50 240 Q 320 420 640 320 T 1330 400"
-  // flipped: "M -60 120 Q 360 230 660 360 T 1340 640";
-  // manually adjusted:
-  const RIVER_D = "M -53,234 C 219,709 863,-81 1327,629";
-  // State: which content box is open (null = none)
-  let activeStationId = $state<string | null>(null);
+  // CORRECTED river path: top-left → bottom-right descent (HANDOFF §3.1).
+  const RIVER_D = 'M -53,234 C 219,709 863,-81 1327,629';
 
-  // State: station positions computed from path
-  let stations = $state(
-    STATIONS.map(s => ({ ...s, x: 0, y: 0 }))
-  );
-
-  // State: mobile breakpoint
+  // --- Reactive state -------------------------------------------------------
+  let activeStationId = $state<StationId | null>(null);
+  let stations = $state(STATIONS.map((s) => ({ ...s, x: 0, y: 0 })));
   let isMobile = $state(false);
-
-  // State: scroll position (for home page morph trigger)
   let scrollY = $state(0);
-
-  // State: current route (for compact state on /blog*)
-  let currentRoute = $state(typeof window !== 'undefined' ? window.location.pathname : '/');
-
-  // State: which prose section is currently in view (for scrollspy)
+  let viewportH = $state(0);
+  let route = $state('/');
   let activeScrollSection = $state<string | null>(null);
 
   // Refs
   let pathEl: SVGPathElement | null = null;
-  let pageEl: HTMLElement | null = null;
 
-  // Computed: is there an active station
-  const hasActiveStation = $derived(activeStationId !== null);
-
-  // Computed: should be in compact mode?
-  // Compact if: (is mobile) OR (has active content box) OR (on /blog* routes) OR (scrolled past hero on home)
-  const isCompact = $derived(
-    isMobile ||
-    hasActiveStation ||
-    currentRoute.startsWith('/blog') ||
-    (currentRoute === '/' && scrollY > 400)
+  // --- Derived (delegates all decisions to the pure core) -------------------
+  const bandInput = $derived<BandInput>({
+    isMobile,
+    route,
+    scrollY,
+    viewportH,
+    activeStationId,
+  });
+  const compact = $derived(computeCompact(bandInput));
+  const activeSection = $derived(
+    activeStationId ? sections.find((s) => s.id === activeStationId) ?? null : null,
   );
 
-  // Track scroll position
-  function handleScroll() {
-    scrollY = window.scrollY;
-  }
+  // R6: when the band morphs hero→compact, close any open box. `prevCompact` is a
+  // plain (non-reactive) var tracking the previous value across runs. Assigning
+  // activeStationId its current value is a no-op in Svelte 5 (===), so re-running
+  // this effect when the box opens/closes cannot loop.
+  let prevCompact = false;
+  $effect(() => {
+    const c = compact;
+    activeStationId = reconcileOnCompactChange(prevCompact, c, activeStationId);
+    prevCompact = c;
+  });
 
-  // Handle route changes (View Transitions client-side navigation)
-  function handleRouteChange() {
-    const newRoute = window.location.pathname;
-    currentRoute = newRoute;
-
-    // Reset scroll position when route changes
-    scrollY = window.scrollY;
-
-    // Update URL hash if a station is active
-    if (activeStationId && !newRoute.startsWith('/blog')) {
-      window.history.replaceState(null, '', `#${activeStationId}`);
-    }
-
-    // Reset scrollspy active section
-    activeScrollSection = null;
-  }
-
-  // Scrollspy: detect which prose section is in view
-  function updateScrollspy() {
-    if (!isCompact || currentRoute !== '/') return;
-
-    const sections = document.querySelectorAll('.section-prose');
-    let currentSection: string | null = null;
-    let minDistance = Infinity;
-
-    sections.forEach((section) => {
-      const rect = section.getBoundingClientRect();
-      const distance = Math.abs(rect.top);
-
-      // Consider section "active" if it's within 40% of viewport
-      if (rect.top <= window.innerHeight * 0.4 && rect.bottom >= 0) {
-        const sectionId = section.id;
-        // Find the closest section within the active zone
-        if (distance < minDistance) {
-          minDistance = distance;
-          currentSection = sectionId;
+  // --- Effects runner (the only place DOM side effects happen) --------------
+  function applyEffect(effect: ClickEffect) {
+    switch (effect.kind) {
+      case 'navigate':
+        navigate(effect.route);
+        break;
+      case 'scrollTo': {
+        const el = document.getElementById(effect.id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+          window.history.replaceState(null, '', `#${effect.id}`);
         }
+        break;
       }
-    });
-
-    if (currentSection) {
-      activeScrollSection = currentSection;
+      case 'none':
+        break;
     }
   }
 
-  // Handle station click
-  function handleStationClick(stationId: string) {
-    const station = STATIONS.find(s => s.id === stationId);
+  function handleStationClick(stationId: StationId) {
+    const station = STATIONS.find((s) => s.id === stationId);
     if (!station) return;
-
-    if (station.isRoute) {
-      // Blog station: navigate to route
-      navigate(station.route);
-      return;
-    }
-
-    // In compact mode: scroll to prose section
-    if (isCompact) {
-      const section = document.getElementById(stationId);
-      if (section) {
-        section.scrollIntoView({ behavior: 'smooth' });
-        // Update URL hash
-        window.history.replaceState(null, '', `#${stationId}`);
-      }
-      return;
-    }
-
-    // In hero mode: toggle content box
-    if (activeStationId === stationId) {
-      activeStationId = null; // Close if already open
-    } else {
-      activeStationId = stationId; // Open new station
-    }
+    const result = reduceStationClick(station, bandInput);
+    activeStationId = result.activeStationId;
+    applyEffect(result.effect);
   }
 
-  // Close active station (e.g., from close button or Esc key)
   function closeActiveStation() {
     activeStationId = null;
   }
 
-  // Navigate back to home
   function navigateToHome() {
     navigate('/');
   }
 
-  // Compute station positions from SVG path
+  // Label for a station: CMS label if the section exists, else the structural default.
+  function labelFor(station: StationDef): string {
+    return sections.find((s) => s.id === station.id)?.label ?? station.label;
+  }
 
-  // Compute station positions from SVG path
+  // --- DOM-derived input updates --------------------------------------------
   function computeStationPositions() {
     if (!pathEl) return;
-
     const totalLength = pathEl.getTotalLength();
-    stations = STATIONS.map(s => {
-      const point = pathEl.getPointAtLength(s.t * totalLength);
+    stations = STATIONS.map((s) => {
+      const point = pathEl!.getPointAtLength(s.t * totalLength);
       return { ...s, x: point.x, y: point.y };
     });
   }
 
-  // Check mobile breakpoint
   function checkMobile() {
-    isMobile = window.matchMedia("(max-width: 820px)").matches;
+    isMobile = window.matchMedia('(max-width: 820px)').matches;
   }
 
-  // Initialize on mount
-  onMount(() => {
-    // Check initial route now that window is available
-    currentRoute = window.location.pathname;
-
-    checkMobile();
-    // Wait for next tick to ensure pathEl is available
-    requestAnimationFrame(() => {
-      computeStationPositions();
+  // Scrollspy: highlight the prose section nearest the top of the viewport.
+  // Only meaningful on home, in compact (reading) mode. (SPEC R9.)
+  function updateScrollspy() {
+    if (!isHomeRoute(route) || !compact) return;
+    const proseSections = document.querySelectorAll('.section-prose');
+    let current: string | null = null;
+    let minDistance = Infinity;
+    proseSections.forEach((section) => {
+      const rect = section.getBoundingClientRect();
+      const distance = Math.abs(rect.top);
+      if (rect.top <= window.innerHeight * 0.4 && rect.bottom >= 0 && distance < minDistance) {
+        minDistance = distance;
+        current = section.id;
+      }
     });
+    if (current) activeScrollSection = current;
+  }
 
-    // Listen for resize for mobile breakpoint
-    const mediaQuery = window.matchMedia("(max-width: 820px)");
-    const handleResize = () => {
+  onMount(() => {
+    // Sync all window-derived inputs. Runs on mount AND on every client-side
+    // navigation, so listeners work regardless of which route the session
+    // started on (SPEC R9 — fixes the persisted-island lifecycle bug).
+    const sync = () => {
+      route = window.location.pathname;
+      viewportH = window.innerHeight;
+      scrollY = window.scrollY;
       checkMobile();
-      // Recompute positions when breakpoint changes
-      requestAnimationFrame(() => {
-        computeStationPositions();
-      });
+      activeScrollSection = null;
+      requestAnimationFrame(computeStationPositions);
     };
-    mediaQuery.addEventListener("change", handleResize);
+    sync();
 
-    // Listen for scroll (only on home page)
-    if (currentRoute === '/') {
-      window.addEventListener('scroll', handleScroll, { passive: true });
-      window.addEventListener('scroll', updateScrollspy, { passive: true });
-    }
-
-    // Listen for route changes (View Transitions navigation)
-    window.addEventListener('popstate', handleRouteChange);
-    window.addEventListener('astro:page-load', handleRouteChange);
-
-    // Listen for hash changes (for deep linking)
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "");
-      if (hash && STATIONS.find(s => s.id === hash)) {
-        activeStationId = hash;
+    const onScroll = () => {
+      scrollY = window.scrollY;
+      updateScrollspy();
+    };
+    const onResize = () => {
+      viewportH = window.innerHeight;
+      checkMobile();
+      requestAnimationFrame(computeStationPositions);
+    };
+    const onHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && STATIONS.some((s) => s.id === hash && s.kind === 'section')) {
+        activeStationId = hash as StationId;
       }
     };
-    window.addEventListener("hashchange", handleHashChange);
-    handleHashChange(); // Check initial hash
-
-    // Listen for keyboard (Esc to close)
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && activeStationId) {
-        closeActiveStation();
-      }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && activeStationId) closeActiveStation();
     };
-    window.addEventListener("keydown", handleKeyDown);
 
-    // Cleanup
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+    // Astro fires view-transition lifecycle events on `document` (non-bubbling),
+    // NOT window. Listening on window here silently breaks route updates after a
+    // client-side navigate() — which left the band stuck compact on /blog → /.
+    document.addEventListener('astro:page-load', sync);
+    window.addEventListener('popstate', sync);
+    window.addEventListener('hashchange', onHashChange);
+    window.addEventListener('keydown', onKeyDown);
+    onHashChange(); // honour an initial deep link
+
     return () => {
-      mediaQuery.removeEventListener("change", handleResize);
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('scroll', updateScrollspy);
-      window.removeEventListener('popstate', handleRouteChange);
-      window.removeEventListener('astro:page-load', handleRouteChange);
-      window.removeEventListener("hashchange", handleHashChange);
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('astro:page-load', sync);
+      window.removeEventListener('popstate', sync);
+      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('keydown', onKeyDown);
     };
   });
 </script>
 
-<div class="klu-page" data-compact={isCompact ? "true" : "false"} bind:this={pageEl}>
+<div
+  class="klu-page"
+  data-compact={compact ? 'true' : 'false'}
+  style:--klu-texture-url={`url(${textureUrl})`}
+>
   <a href="#main" class="klu-skip">Zum Inhalt springen</a>
 
-  {#if currentRoute.startsWith('/blog')}
+  {#if route.startsWith('/blog')}
     <header class="klu-blog-nav">
       <button class="back-home" onclick={navigateToHome} aria-label="Zurück zur Startseite">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -304,12 +258,12 @@
       />
     </svg>
 
-    <div class="klu-headline" aria-hidden={isCompact ? "true" : undefined}>
+    <div class="klu-headline" aria-hidden={compact ? 'true' : undefined}>
       <span class="eyebrow">Wohngenossenschaft · Bonn</span>
       <h1>Gemeinschaft am Klufterbach.</h1>
     </div>
 
-    <div class="klu-subline" aria-hidden={isCompact ? "true" : undefined}>
+    <div class="klu-subline" aria-hidden={compact ? 'true' : undefined}>
       <p>
         Folge dem Bach. Sechs Stationen erzählen, wer wir sind und wie
         wir am Klufterbach leben wollen.
@@ -321,35 +275,37 @@
         <button
           type="button"
           class="klu-station"
-          class:active={activeScrollSection === station.id && !station.isRoute}
-          style:left={isCompact ? `${(i / (STATIONS.length - 1)) * 84 + 8}%` : `${(station.x / 1280) * 100}%`}
-          style:top={isCompact ? "50%" : `${(station.y / 720) * 100}%`}
-          aria-expanded={activeStationId === station.id}
-          aria-controls={!station.isRoute ? `panel-${station.id}` : undefined}
+          class:active={activeScrollSection === station.id && station.kind === 'section'}
+          style:left={compact ? `${(i / (STATIONS.length - 1)) * 84 + 8}%` : `${(station.x / 1280) * 100}%`}
+          style:top={compact ? '50%' : `${(station.y / 720) * 100}%`}
+          aria-expanded={station.kind === 'section' ? activeStationId === station.id : undefined}
+          aria-controls={station.kind === 'section' ? `panel-${station.id}` : undefined}
           onclick={() => handleStationClick(station.id)}
         >
           <span class="dot" aria-hidden="true"></span>
-          <span class="label">{station.label}</span>
+          <span class="label">{labelFor(station)}</span>
         </button>
       {/each}
     </div>
   </section>
 
-  <!-- Content area for static station boxes -->
-  <main class="klu-content" aria-live="polite">
-    {#if activeStationId && !STATIONS.find(s => s.id === activeStationId)?.isRoute}
+  <!-- Hero content box region (NOT a <main>; the page owns the document's main). -->
+  <div class="klu-content" role="region" aria-live="polite">
+    {#if activeSection}
       <SectionBox
-        station={STATIONS.find(s => s.id === activeStationId)!}
+        id={activeSection.id}
+        label={activeSection.label}
+        title={activeSection.title}
+        items={activeSection.items}
         onClose={closeActiveStation}
       />
     {/if}
-  </main>
+  </div>
 </div>
 
 <style>
   .klu-page {
     background: var(--wn-paper);
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
   }
@@ -430,7 +386,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background-image: url("src/assets/uploads/forest.webp");
+    background-image: var(--klu-texture-url, none);
     background-size: cover;
     opacity: 0.42;
     pointer-events: none;
@@ -611,7 +567,6 @@
   /* Content area */
   .klu-content {
     padding: 0;
-    min-height: 400px;
   }
 
   /* Mobile responsive — compact mode only on ≤ 820px */

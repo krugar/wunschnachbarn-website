@@ -1,7 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import KlufterbachNav from '../../components/KlufterbachNav.svelte';
 import Footer from '../../components/Footer.astro';
 
 export async function getStaticPaths() {
@@ -17,8 +16,6 @@ const { Content } = await render(post);
 ---
 
 <Base title={`${post.data.title} – Wunschnachbarn Bonn eG`}>
-  <KlufterbachNav client:load transition:persist="klufterbach-nav" />
-
   <main id="main">
     <article class="blog-post-page">
       <header class="post-header">

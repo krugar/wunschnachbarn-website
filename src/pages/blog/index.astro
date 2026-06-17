@@ -1,7 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Footer from '../../components/Footer.astro';
-import KlufterbachNav from '../../components/KlufterbachNav.svelte';
 import BlogList from '../../components/BlogList.svelte';
 import { getCollection } from 'astro:content';
 
@@ -26,8 +25,6 @@ const categories = ['Alle', 'Plenum', 'Bauphase', 'Werkstatt', 'Garten', 'Soziok
 ---
 
 <Base title="Blog – Wunschnachbarn Bonn eG">
-  <KlufterbachNav client:load transition:persist="klufterbach-nav" />
-
   <main id="main">
     <article class="blog-page">
       <header class="blog-header">

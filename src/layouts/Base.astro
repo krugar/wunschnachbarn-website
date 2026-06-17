@@ -1,6 +1,11 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import '../styles/colors_and_type.css';
+import KlufterbachNav, { type SectionData } from '../components/KlufterbachNav.svelte';
+import { getCollection } from 'astro:content';
+// Band texture resolved at build time (O3); CSS background, not <img>.
+import bandTexture from '../assets/uploads/forest.webp';
+import type { StationId } from '../lib/band-state';
 
 interface Props {
   title?: string;
@@ -11,6 +16,23 @@ const {
   title = 'Wunschnachbarn Bonn eG – Gemeinschaft am Klufterbach',
   description = 'Wohngenossenschaft in Bonn. Wir bauen gemeinsam nachhaltigen, bezahlbaren Wohnraum.'
 } = Astro.props;
+
+// Shape the section content the persisted band needs on '/' (O2). bodyHtml is
+// the same server-rendered markdown the prose uses — single source (R7). Today
+// one body → one item; the items[] shape is ready for the deferred CMS schema (R14).
+const sections = (await getCollection('sections')).sort((a, b) => a.data.order - b.data.order);
+const sectionData: SectionData[] = sections.map((s) => ({
+  id: s.id as StationId,
+  label: s.data.label,
+  title: s.data.title,
+  items: [
+    {
+      bodyHtml: s.rendered?.html ?? '',
+      image: s.data.image || undefined,
+      imageAlt: s.data.imageAlt || undefined,
+    },
+  ],
+}));
 ---
 
 <!doctype html>
@@ -31,6 +53,13 @@ const {
   </head>
 
   <body>
+    <!-- Persisted across routes (HANDOFF §7): mounted ONCE here, never per-page. -->
+    <KlufterbachNav
+      client:load
+      transition:persist="klufterbach-nav"
+      sections={sectionData}
+      textureUrl={bandTexture.src}
+    />
     <slot />
   </body>
 </html>
