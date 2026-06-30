@@ -4,24 +4,57 @@ import Footer from '../../components/Footer.astro';
 import BlogList from '../../components/BlogList.svelte';
 import { getCollection } from 'astro:content';
 
+// Import all upload images using an absolute glob pattern
+// Note: The pattern must be relative to the project root for Vite's import.meta.glob
+const uploadImages = import.meta.glob<{ default: { src: string } }>(
+  '/src/assets/uploads/*.{jpg,jpeg,png,gif,webp}',
+  { eager: true }
+);
+
 // Get blog posts from CMS
 const posts = await getCollection('posts', p => !p.data.draft);
 
-// Map posts to the format expected by BlogList
-const blogListPosts = posts.map((post, index) => ({
-  id: index + 1, // Use numeric ID for BlogList compatibility
-  slug: post.id,
-  date: post.data.date.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }),
-  category: post.data.category,
-  title: post.data.title,
-  excerpt: post.data.excerpt,
-  heroImage: null, // Empty for v1
-}));
+// Process images using the pre-imported image map
+const blogListPosts = posts.map((post, index) => {
+  let heroImage = null;
+  let heroAlt = post.data.heroAlt;
+
+  if (post.data.heroImage) {
+    try {
+      // CMS stores paths like "src/assets/uploads/file.jpg"
+      // The globs use keys like "/src/assets/uploads/file.jpg" (with leading slash)
+      const globKey = `/${post.data.heroImage}`;
+
+      const imageData = uploadImages[globKey];
+      if (imageData) {
+        heroImage = {
+          src: imageData.default.src,
+        };
+      }
+    } catch (error) {
+      console.warn(`Failed to load image for post "${post.data.title}":`, post.data.heroImage, error);
+      heroImage = null;
+    }
+  }
+
+  return {
+    id: index + 1,
+    slug: post.id,
+    date: post.data.date.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }),
+    category: post.data.category,
+    title: post.data.title,
+    excerpt: post.data.excerpt,
+    heroImage,
+    heroAlt,
+  };
+});
 
 // Sort by date (newest first)
 blogListPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-const categories = ['Alle', 'Plenum', 'Bauphase', 'Werkstatt', 'Garten', 'Soziokratie'];
+// Extract unique categories from posts
+const categorySet = new Set(posts.map(p => p.data.category));
+const categories = ['Alle', ...Array.from(categorySet).sort()];
 ---
 
 <Base title="Blog – Wunschnachbarn Bonn eG">
@@ -45,50 +78,3 @@ const categories = ['Alle', 'Plenum', 'Bauphase', 'Werkstatt', 'Garten', 'Soziok
 
   <Footer />
 </Base>
-
-<style>
-  .blog-page {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: var(--sp-8) var(--sp-5);
-  }
-
-  .blog-header {
-    margin-bottom: var(--sp-8);
-    text-align: center;
-  }
-
-  .blog-header .eyebrow {
-    color: var(--wn-violet);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-size: var(--fs-eyebrow);
-    font-weight: 600;
-  }
-
-  .blog-header h1 {
-    font-size: var(--fs-display);
-    margin: var(--sp-3) 0 var(--sp-4);
-  }
-
-  .blog-subline {
-    font-size: var(--fs-body-lg);
-    color: var(--fg-muted);
-    max-width: 50ch;
-    margin: 0 auto;
-  }
-
-  @media (max-width: 768px) {
-    .blog-page {
-      padding: var(--sp-6) var(--sp-4);
-    }
-
-    .blog-header h1 {
-      font-size: var(--fs-h2);
-    }
-
-    .blog-subline {
-      font-size: var(--fs-body);
-    }
-  }
-</style>

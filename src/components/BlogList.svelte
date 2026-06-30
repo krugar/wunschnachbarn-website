@@ -1,4 +1,11 @@
 <script lang="ts">
+  interface ImageResult {
+    src: string;
+    width: number;
+    height: number;
+    format: string;
+  }
+
   interface BlogPost {
     id: number;
     slug: string;
@@ -6,7 +13,8 @@
     category: string;
     title: string;
     excerpt: string;
-    heroImage?: string | null;
+    heroImage?: ImageResult | null;
+    heroAlt?: string;
   }
 
   interface Props {
@@ -23,7 +31,7 @@
   let searchQuery = $state('');
 
   // Computed: filtered posts
-  const filteredPosts = $derived(() => {
+  const filteredPosts = $derived.by(() => {
     return posts.filter(post => {
       // Category filter
       const categoryMatch = activeCategory === 'Alle' || post.category === activeCategory;
@@ -37,12 +45,6 @@
 
       return categoryMatch && searchMatch;
     });
-  });
-
-  // Computed: posts grouped by date (for future use)
-  const postsByDate = $derived(() => {
-    // Currently just return filtered posts sorted by date
-    return [...filteredPosts];
   });
 
   // Handle category change
@@ -100,7 +102,18 @@
         <article class="blog-post">
           <a href={`/blog/${post.slug}`} class="post-link">
             <div class="post-thumb">
-              <span class="thumb-label">Foto</span>
+              {#if post.heroImage}
+                <img
+                  src={post.heroImage.src}
+                  width={post.heroImage.width}
+                  height={post.heroImage.height}
+                  alt={post.heroAlt || post.title}
+                  loading="lazy"
+                  decoding="async"
+                />
+              {:else}
+                <span class="thumb-label">Foto</span>
+              {/if}
             </div>
             <div class="post-content">
               <div class="post-meta">
@@ -243,6 +256,12 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+  }
+
+  .post-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .thumb-label {
