@@ -5,6 +5,12 @@ import sveltia from 'astro-loader-sveltia-cms';
 
 // https://astro.build/config
 export default defineConfig({
+  // Image service (built into Astro 7+)
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+    },
+  },
   integrations: [
     svelte(),
     sveltia({
@@ -123,6 +129,5 @@ export default defineConfig({
           },
         ],
       },
-    }),
-  ],
+    }),],
 });
