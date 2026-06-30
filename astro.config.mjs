@@ -5,6 +5,11 @@ import sveltia from 'astro-loader-sveltia-cms';
 
 // https://astro.build/config
 export default defineConfig({
+  // Base path for GitHub Pages deployment
+  // Site will be available at: https://krugar.github.io/wunschnachbarn-website/
+  // For local development (localhost:4321), this can be '/' or left undefined
+  base: '/wunschnachbarn-website',
+
   // Image service (built into Astro 7+)
   image: {
     service: {
