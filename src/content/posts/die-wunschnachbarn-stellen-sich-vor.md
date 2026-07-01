@@ -1,7 +1,7 @@
 ---
 title: 'Mehr als nur Nachbarn: Wir stellen uns vor!'
 date: 2026-01-15T01:00:00
-category: Plenum
+category: Gemeinschaft
 excerpt: Wir sind dabei, etwas aufzubauen das weit über vier Wände hinausgeht. Wir reden nicht nur über Gemeinschaft. Wir gestalten sie aktiv!
 heroImage: src/assets/uploads/das-haus-der-wunschnachbarn.png
 heroAlt: Die "Villa", eines unserer beiden Häuser am Klufterbach. In den Fenstern sieht man winkende Wunschnachbarn

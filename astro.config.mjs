@@ -108,7 +108,7 @@ export default defineConfig({
             fields: [
               { name: 'title', label: 'Titel', widget: 'string' },
               { name: 'date', label: 'Datum', widget: 'datetime' },
-              { name: 'category', label: 'Kategorie', widget: 'select', options: ['Plenum', 'Bauphase', 'Werkstatt', 'Garten', 'Soziokratie'] },
+              { name: 'category', label: 'Kategorie', widget: 'select', options: ['Gemeinschaft', 'Bauphase', 'Wald', 'Soziokratie'] },
               { name: 'excerpt', label: 'Anriss', widget: 'text' },
               { name: 'heroImage', label: 'Titelbild', widget: 'image', required: false },
               { name: 'heroAlt', label: 'Bild-Alt', widget: 'string', required: false },

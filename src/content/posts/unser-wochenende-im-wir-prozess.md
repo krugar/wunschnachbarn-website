@@ -1,7 +1,7 @@
 ---
 title: Unser Wochenende im Wir-Prozess
 date: 2026-01-28T01:00:00
-category: Plenum
+category: Gemeinschaft
 excerpt: Im Januar 2026 haben sich die alten und neuen Mitglieder unserer Genossenschaft auf ein Experiment eingelassen. Ein Wir-Prozess ohne Leitung, ohne Agenda, aber mit viel Gefühl. Wir haben uns mit zwei Teilnehmenden zusammengesetzt, um über ihre Erfahrungen zu sprechen.
 heroImage: src/assets/uploads/WirProzessKreis-300x225.jpg
 heroAlt: Karten mit Kommunikationsempfehlungen für den Wir-Prozess, im Kreis ausgelegt um Blumen und Kerzen
