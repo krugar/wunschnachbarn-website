@@ -1,11 +1,18 @@
 ---
 email: mitmachen@wunschnachbarn.org
 impressum: |-
+  ## Impressum
   Wunschnachbarn Bonn eG
   c/o Gero Sieberger
   Servatiusstr. 62
   53129 Bonn
   E-Mail: post@wunschnachbarn.org
+
+  ### Registereintrag
+  [TODO: Genossenschaftsregister und Gericht einfügen]
+
+  ### Vertretungsberechtigte
+  Anke Brockhaus-Dumke, Antje Huber, Gero Sieberger
 datenschutz: |-
   # Datenschutzerklärung
 
@@ -19,28 +26,3 @@ datenschutz: |-
 
   Wir haben einen Vertrag über Auftragsverarbeitung (AVV) zur Nutzung des oben genannten Dienstes geschlossen. Hierbei handelt es sich um einen datenschutzrechtlich vorgeschriebenen Vertrag, der gewährleistet, dass dieser die personenbezogenen Daten unserer Websitebesucher nur nach unseren Weisungen und unter Einhaltung der DSGVO verarbeitet.
 ---
-
----
-email: "mitmachen@wunschnachbarn.org"
-impressum: |
-  ## Impressum
-
-  **Wunschnachbarn Bonn eG**
-
-  [Hier rechtliche Angaben einfügen]
-
-  ### Kontakt
-  E-Mail: mitmachen@wunschnachbarn.org
-
-  ### Registereintrag
-  [Genossenschaftsregister und Gericht einfügen]
-
-  ### Vertretungsberechtigte
-  [Vorstandsmitglieder einfügen]
-datenschutz: |
-  ## Datenschutzerklärung
-
-  [Datenschutzstext einfügen]
-
-  ### Kontakt
-  Bei Fragen zum Datenschutz: mitmachen@wunschnachbarn.org
