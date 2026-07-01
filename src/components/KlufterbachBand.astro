@@ -4,10 +4,6 @@ import { isHomeRoute, isCompactRoute, buildUrl, type StationId } from '../lib/ba
 import logo from '../assets/logo.svg';
 // Resolved at build time by Astro's asset pipeline (RB17) — no literal path.
 import bandTexture from '../assets/design-system/forest.webp';
-// Public-folder asset (not src/assets — no import pipeline), so its href still
-// needs the base-path prefix (RB17): buildUrl(), not a hand-written literal.
-const panelPhotoTextureUrl = buildUrl('/assets/design-system/forest-texture.png');
-
 // Station data: static x/y coordinates (percentages), no runtime measurement
 interface Station {
   id: StationId;
@@ -18,12 +14,12 @@ interface Station {
 }
 
 const STATIONS: Station[] = [
-  { id: 'wir', label: 'Wir', kind: 'section', x: 10, y: 54 },
-  { id: 'projekt', label: 'Projekt', kind: 'section', x: 27, y: 55 },
-  { id: 'ziele', label: 'Ziele', kind: 'section', x: 44, y: 49 },
-  { id: 'blog', label: 'Blog', kind: 'route', x: 61, y: 45 },
-  { id: 'termine', label: 'Termine', kind: 'section', x: 77, y: 49 },
-  { id: 'kontakt', label: 'Kontakt', kind: 'section', x: 90, y: 61 },
+  { id: 'wir', label: 'Wir', kind: 'section', x: 10, y: 34 },
+  { id: 'projekt', label: 'Projekt', kind: 'section', x: 27, y: 35 },
+  { id: 'ziele', label: 'Ziele', kind: 'section', x: 44, y: 29 },
+  { id: 'blog', label: 'Blog', kind: 'route', x: 61, y: 25 },
+  { id: 'termine', label: 'Termine', kind: 'section', x: 77, y: 29 },
+  { id: 'kontakt', label: 'Kontakt', kind: 'section', x: 90, y: 41 },
 ];
 
 // Section content (sorted by order field)
@@ -58,7 +54,7 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
   data-mode={isHome ? 'home' : 'compact'}
   role={rootRole}
   aria-label={rootLabel}
-  style={`--klu-texture-url:url(${bandTexture.src}); --klu-panel-photo-texture:url(${panelPhotoTextureUrl})`}
+  style={`--klu-texture-url:url(${bandTexture.src})`}
 >
   <a href="#main" class="klu-skip">Zum Inhalt springen</a>
 
@@ -87,15 +83,15 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
       </defs>
       <path
         class="river-shadow"
-        d="M -53,234 C 219,709 863,-81 1327,629"
+        d="M -53,90 C 219,565 863,-225 1327,485"
       />
       <path
         class="river"
-        d="M -53,234 C 219,709 863,-81 1327,629"
+        d="M -53,90 C 219,565 863,-225 1327,485"
         stroke="url(#klu-grad)"
       />
     </svg>
-
+<!-- svg path, old: d="M -53,234 C 219,709 863,-81 1327,629" -->
     <!-- Hero headline (only in home mode) -->
     <div class={isHome ? 'klu-headline' : 'klu-headline klu-headline--hidden'}>
       <span class="eyebrow">Wohngenossenschaft · Bonn</span>
@@ -119,7 +115,7 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
             class="klu-station"
             name="klu-stations"
             id={`panel-${station.id}`}
-            style={`--klu-x:${station.x}%; --klu-y:${station.y}%`}
+            style={`--klu-x:${station.x}%; --klu-y:${station.y}%; --klu-x-n:${station.x}`}
           >
             <summary class="klu-station-summary">
               <span class="dot" aria-hidden="true" />
@@ -269,7 +265,7 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
     position: absolute;
     bottom: var(--sp-8);
     left: var(--sp-8);
-    z-index: 10;
+    z-index: 2;
     max-width: 180px;
   }
 
@@ -617,7 +613,7 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
 
   .klu-panel-photo {
     background-color: var(--wn-mint-200);
-    background-image: var(--klu-panel-photo-texture, none);
+    background-image: var(--klu-texture-url, none);
     background-size: 700px auto;
     background-repeat: repeat;
     background-blend-mode: soft-light;
@@ -678,15 +674,74 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
       top: var(--klu-y);
     }
 
+    /* Zero-height anchor at the station's exact (x, y) point (RB-panel-split).
+       left/top are 50% — NOT var(--klu-x)/var(--klu-y) again — because this
+       element's containing block is .klu-station itself, which already
+       consumed that percentage to position itself against the viewport-
+       sized .klu-stations container. Re-applying var(--klu-x)/var(--klu-y)
+       here resolved against .klu-station's tiny shrink-to-fit box instead
+       (bug in the previous revision); 50% + translate(-50%,-50%) puts this
+       0×0 anchor exactly on .klu-station's own center, which is the point.
+       Background/radius/shadow moved off this element and onto
+       .klu-panel-text / .klu-panel-photo below, since this box no longer
+       has any height to render them against. */
     .klu-band[data-mode="home"] .klu-panel {
       position: absolute;
-      top: calc(var(--klu-y, 50) * 1vh + 40px);
-      left: calc(var(--klu-x, 50) * 1vw + 40px);
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      margin: 0;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+      overflow: visible;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      /* Station's absolute horizontal position in true viewport units.
+         NOT derived from --klu-x via %÷% division: that trick type-checks
+         per the calc() spec but doesn't survive being re-substituted into
+         a different element/property (verified in Chrome + Firefox devtools
+         — the embedded percentage loses its resolution context and either
+         zeroes out or never collapses to a used value). Using a plain
+         unitless --klu-x-n (set alongside --klu-x in the template) instead:
+         <number>×vw -> <length>, no percentage arithmetic involved at all. */
+      --klu-x-vw: calc(var(--klu-x-n) * 1vw);
+    }
+
+    /* Photo card: bottom edge pinned to the anchor line, grows upward —
+       always entirely above the station point regardless of content.
+       Horizontal center is clamped to the viewport using the worst-case
+       half-width (max-width/2 = 350px) so the outermost stations (Wir,
+       Kontakt) can't push the card off-screen; vertical stays unclamped
+       on purpose (zoom may still overflow the y-axis). Narrower cards get
+       a slightly larger-than-necessary edge gutter — an accepted tradeoff
+       of clamping by worst case without a ResizeObserver. */
+    .klu-band[data-mode="home"] .klu-panel-photo {
+      position: absolute;
+      left: calc(clamp(350px, var(--klu-x-vw), calc(100vw - 350px)) - var(--klu-x-vw));
+      bottom: 0;
+      transform: translateX(-50%);
+      margin-bottom: var(--sp-8);
       min-width: 500px;
       max-width: 700px;
-      grid-template-columns: 1fr 1fr;
-      margin: 0;
-      z-index: 5;
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-card);
+    }
+
+    /* Text card: top edge pinned to the anchor line, grows downward —
+       always entirely below the station point regardless of content.
+       Same horizontal clamp; worst-case half-width 35vw = max-width/2. */
+    .klu-band[data-mode="home"] .klu-panel-text {
+      position: absolute;
+      left: calc(clamp(27.5vw, var(--klu-x-vw), 72.5vw) - var(--klu-x-vw));
+      top: 0;
+      transform: translateX(-50%);
+      margin-top: var(--sp-8);
+      min-width: 50vw;
+      max-width: 70vw;
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-card);
     }
 
     .klu-band[data-mode="home"] .klu-station-summary:hover {
