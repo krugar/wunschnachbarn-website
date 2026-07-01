@@ -1,6 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
-import { sveltiaLoader } from 'astro-loader-sveltia-cms/loader';
+// import { sveltiaLoader } from 'astro-loader-sveltia-cms/loader';
 
 // Sections collection — the five static sections (Wir, Projekt, Ziele, Termine, Kontakt)
 const sections = defineCollection({
@@ -29,14 +29,20 @@ const posts = defineCollection({
   }),
 });
 
-// Site collection — site-wide settings
+// Site collection — site-wide settings (email only; legal moved to legal collection)
 const site = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/site' }),
   schema: z.object({
     email: z.string().optional(),
-    impressum: z.string().optional(),
-    datenschutz: z.string().optional(),
   }),
 });
 
-export const collections = { sections, posts, site };
+// Legal collection — Impressum and Datenschutz (single-sourced, rendered as HTML)
+const legal = defineCollection({
+  loader: glob({ pattern: '*.md', base: './src/content/legal' }),
+  schema: z.object({
+    title: z.string(),
+  }),
+});
+
+export const collections = { sections, posts, site, legal };

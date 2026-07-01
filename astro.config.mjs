@@ -117,8 +117,32 @@ export default defineConfig({
             ],
           },
           {
+            name: 'legal',
+            label: 'Rechtliches',
+            files: [
+              {
+                name: 'impressum',
+                label: 'Impressum',
+                file: 'src/content/legal/impressum.md',
+                fields: [
+                  { name: 'title', label: 'Titel', widget: 'string' },
+                  { name: 'body', label: 'Inhalt', widget: 'markdown' },
+                ],
+              },
+              {
+                name: 'datenschutz',
+                label: 'Datenschutz',
+                file: 'src/content/legal/datenschutz.md',
+                fields: [
+                  { name: 'title', label: 'Titel', widget: 'string' },
+                  { name: 'body', label: 'Inhalt', widget: 'markdown' },
+                ],
+              },
+            ],
+          },
+          {
             name: 'site',
-            label: 'Seiteneinstellungen',
+            label: ' Seiteneinstellungen',
             files: [
               {
                 name: 'meta',
@@ -126,8 +150,6 @@ export default defineConfig({
                 file: 'src/content/site/meta.md',
                 fields: [
                   { name: 'email', label: 'Kontakt-E-Mail', widget: 'string' },
-                  { name: 'impressum', label: 'Impressum', widget: 'markdown' },
-                  { name: 'datenschutz', label: 'Datenschutz', widget: 'markdown' },
                 ],
               },
             ],

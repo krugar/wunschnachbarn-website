@@ -1,0 +1,789 @@
+---
+import { getCollection } from 'astro:content';
+import { isHomeRoute, isCompactRoute, buildUrl, type StationId } from '../lib/band-state';
+import logo from '../assets/logo.svg';
+// Resolved at build time by Astro's asset pipeline (RB17) — no literal path.
+import bandTexture from '../assets/design-system/forest.webp';
+// Public-folder asset (not src/assets — no import pipeline), so its href still
+// needs the base-path prefix (RB17): buildUrl(), not a hand-written literal.
+const panelPhotoTextureUrl = buildUrl('/assets/design-system/forest-texture.png');
+
+// Station data: static x/y coordinates (percentages), no runtime measurement
+interface Station {
+  id: StationId;
+  label: string;
+  kind: 'section' | 'route';
+  x: number; // percent, 0-100
+  y: number; // percent, 0-100
+}
+
+const STATIONS: Station[] = [
+  { id: 'wir', label: 'Wir', kind: 'section', x: 10, y: 54 },
+  { id: 'projekt', label: 'Projekt', kind: 'section', x: 27, y: 55 },
+  { id: 'ziele', label: 'Ziele', kind: 'section', x: 44, y: 49 },
+  { id: 'blog', label: 'Blog', kind: 'route', x: 61, y: 45 },
+  { id: 'termine', label: 'Termine', kind: 'section', x: 77, y: 49 },
+  { id: 'kontakt', label: 'Kontakt', kind: 'section', x: 90, y: 61 },
+];
+
+// Section content (sorted by order field)
+const sectionEntries = (await getCollection('sections')).sort((a, b) => a.data.order - b.data.order);
+
+// Legal content
+const legalEntries = await getCollection('legal');
+const impressumEntry = legalEntries.find(e => e.id === 'impressum');
+const datenschutzEntry = legalEntries.find(e => e.id === 'datenschutz');
+
+// Merge station definitions with their content once, so the template loop
+// below is a plain .map() with no repeated .find() lookups (DESIGN §4.3).
+const stationViews = STATIONS.map((station) => ({
+  ...station,
+  section: sectionEntries.find((s) => s.id === station.id),
+}));
+
+// Current route (canonical)
+const currentRoute = Astro.url.pathname;
+const isHome = isHomeRoute(currentRoute);
+
+// Root element tag: <main> on home, <div role="region"> elsewhere (SPEC §4.4)
+const RootTag = isHome ? 'main' : 'div';
+const rootId = isHome ? 'main' : 'klufterbach-band';
+const rootRole = isHome ? undefined : 'region';
+const rootLabel = isHome ? undefined : 'Hauptnavigation';
+---
+
+<RootTag
+  id={rootId}
+  class="klu-band"
+  data-mode={isHome ? 'home' : 'compact'}
+  role={rootRole}
+  aria-label={rootLabel}
+  style={`--klu-texture-url:url(${bandTexture.src}); --klu-panel-photo-texture:url(${panelPhotoTextureUrl})`}
+>
+  <a href="#main" class="klu-skip">Zum Inhalt springen</a>
+
+  <!-- Logo: lower-left placement -->
+  <div class="klu-logo" aria-hidden="true">
+    <img src={logo.src} alt="Wunschnachbarn Bonn eG Logo" />
+  </div>
+
+  <section class="klu-river">
+    <svg
+      class="klu-band-svg"
+      viewBox="0 0 1280 720"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <defs>
+        <filter id="klu-soft">
+          <feGaussianBlur stdDeviation="0.4" />
+        </filter>
+        <linearGradient id="klu-grad" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stop-color="#C97AA8" />
+          <stop offset="0.4" stop-color="#AE1A6E" />
+          <stop offset="1" stop-color="#931558" />
+        </linearGradient>
+      </defs>
+      <path
+        class="river-shadow"
+        d="M -53,234 C 219,709 863,-81 1327,629"
+      />
+      <path
+        class="river"
+        d="M -53,234 C 219,709 863,-81 1327,629"
+        stroke="url(#klu-grad)"
+      />
+    </svg>
+
+    <!-- Hero headline (only in home mode) -->
+    <div class={isHome ? 'klu-headline' : 'klu-headline klu-headline--hidden'}>
+      <span class="eyebrow">Wohngenossenschaft · Bonn</span>
+      <h1>Gemeinschaft am Klufterbach.</h1>
+    </div>
+
+    <!-- Subline (only in home mode) -->
+    <div class={isHome ? 'klu-subline' : 'klu-subline klu-subline--hidden'}>
+      <p>
+        Folge dem Bach. Sechs Stationen erzählen, wer wir sind und wie
+        wir am Klufterbach leben wollen.
+      </p>
+    </div>
+
+    <!-- Stations: role="navigation" -->
+    <div class="klu-stations" role="navigation" aria-label="Hauptnavigation">
+      {stationViews.map((station) =>
+        station.kind === 'section' ? (
+          /* Section station: <details> with native disclosure */
+          <details
+            class="klu-station"
+            name="klu-stations"
+            id={`panel-${station.id}`}
+            style={`--klu-x:${station.x}%; --klu-y:${station.y}%`}
+          >
+            <summary class="klu-station-summary">
+              <span class="dot" aria-hidden="true" />
+              <span class="label">{station.section?.data.label || station.label}</span>
+            </summary>
+            <div class="klu-panel">
+              <div class="klu-panel-text">
+                <span class="eyebrow">{station.section?.data.label || station.label}</span>
+                <h2>{station.section?.data.title || ''}</h2>
+                <div class="body-content" set:html={station.section?.rendered?.html ?? ''} />
+
+                {/* Inline legal content for Kontakt (RB11/RB12) */}
+                {station.id === 'kontakt' && impressumEntry && (
+                  <div class="klu-legal-inline" set:html={impressumEntry.rendered?.html ?? ''} />
+                )}
+                {station.id === 'kontakt' && datenschutzEntry && (
+                  <details class="klu-legal-nested" id="panel-datenschutz">
+                    <summary>{datenschutzEntry.data.title}</summary>
+                    <div set:html={datenschutzEntry.rendered?.html ?? ''} />
+                  </details>
+                )}
+              </div>
+              <div class="klu-panel-photo">
+                {station.section?.data.image ? (
+                  <img
+                    src={station.section.data.image}
+                    alt={station.section.data.imageAlt ?? ''}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="placeholder" aria-hidden="true">
+                    <span class="kind">{station.section?.data.label || station.label}</span>
+                    <span class="hint">Bild folgt</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </details>
+        ) : (
+          /* Route station (blog): plain link, not <details> */
+          <a
+            class="klu-station klu-station--route"
+            href={buildUrl(station.id === 'blog' ? '/blog' : `/${station.id}`)}
+            style={`--klu-x:${station.x}%; --klu-y:${station.y}%`}
+          >
+            <span class="dot" aria-hidden="true" />
+            <span class="label">{station.label}</span>
+          </a>
+        )
+      )}
+    </div>
+  </section>
+</RootTag>
+
+<script>
+  // Minimal JS: persisted route sync, escape-to-close, hash deep-link
+  // (DESIGN §5)
+
+  import { isHomeRoute } from '../lib/band-state';
+
+  function updateMode() {
+    const isHome = isHomeRoute(location.pathname);
+    const root = document.querySelector('.klu-band');
+    if (root) {
+      root.setAttribute('data-mode', isHome ? 'home' : 'compact');
+    }
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      // Close all open station panels
+      const openPanels = document.querySelectorAll('.klu-station[name="klu-stations"][open]');
+      openPanels.forEach(panel => {
+        (panel as HTMLDetailsElement).open = false;
+      });
+    }
+  }
+
+  function openPanelFromHash() {
+    const hash = location.hash.replace('#', '');
+    if (!hash) return;
+
+    // Check if hash matches a panel ID
+    const panel = document.getElementById(`panel-${hash}`);
+    if (panel && panel.tagName === 'DETAILS') {
+      (panel as HTMLDetailsElement).open = true;
+    }
+  }
+
+  // Run on initial load and after every client-side navigation
+  document.addEventListener('astro:page-load', () => {
+    updateMode();
+    // Don't auto-open from hash on navigation, only on initial load
+  });
+
+  window.addEventListener('popstate', () => {
+    updateMode();
+    openPanelFromHash();
+  });
+
+  window.addEventListener('keydown', handleKeyDown);
+
+  // Initial setup
+  updateMode();
+  openPanelFromHash();
+</script>
+
+<style is:global>
+  :root {
+    --klu-hero-h: 100vh;
+    --klu-compact-h: 110px;
+  }
+</style>
+
+<style>
+  .klu-band {
+    /* Baseline: no overflow: hidden (RB2) */
+    min-height: var(--klu-compact-h);
+    width: 100%;
+    position: relative;
+  }
+
+  .klu-band[data-mode="home"] {
+    height: var(--klu-hero-h);
+  }
+
+  /* Skip link */
+  .klu-skip {
+    position: absolute;
+    top: -100%;
+    left: var(--sp-5);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--wn-green-deep);
+    color: var(--wn-paper);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--r-sm);
+    z-index: 9999;
+    transition: top var(--dur-2) var(--ease-out);
+  }
+  .klu-skip:focus {
+    top: var(--sp-5);
+  }
+
+  /* Logo: lower-left placement */
+  .klu-logo {
+    position: absolute;
+    bottom: var(--sp-8);
+    left: var(--sp-8);
+    z-index: 10;
+    max-width: 180px;
+  }
+
+  .klu-logo img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* River section */
+  .klu-river {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .klu-river::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--klu-texture-url, none);
+    background-size: cover;
+    opacity: 0.42;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 100%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 100%);
+    transition: opacity var(--dur-3) var(--ease-out);
+  }
+
+  .klu-band[data-mode="compact"] .klu-river::after {
+    opacity: 0;
+  }
+
+  /* SVG river */
+  .klu-band-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .klu-band-svg path.river {
+    fill: none;
+    stroke-linecap: round;
+    filter: url(#klu-soft);
+    opacity: 0.92;
+    vector-effect: non-scaling-stroke;
+    stroke-width: 96;
+  }
+
+  .klu-band-svg path.river-shadow {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.15);
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    transform: translateY(4px);
+    stroke-width: 96;
+  }
+
+  /* Headline and subline (home mode only) */
+  .klu-headline {
+    position: absolute;
+    left: 5%;
+    top: 5%;
+    max-width: 11ch;
+    z-index: 3;
+    pointer-events: none;
+    transition: opacity var(--dur-3) var(--ease-out);
+  }
+
+  .klu-headline--hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .klu-headline .eyebrow {
+    color: var(--wn-violet);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .klu-headline h1 {
+    font-family: var(--ff-display);
+    font-weight: 900;
+    font-size: clamp(36px, 4.4vw, 60px);
+    line-height: 0.96;
+    letter-spacing: -0.02em;
+    color: var(--wn-green-deep);
+    margin: 0;
+  }
+
+  .klu-subline {
+    position: absolute;
+    left: 5%;
+    bottom: 15%;
+    max-width: 26ch;
+    z-index: 3;
+    pointer-events: none;
+    transition: opacity var(--dur-3) var(--ease-out);
+  }
+
+  .klu-subline--hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .klu-subline p {
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--wn-green-forest);
+    margin: 0;
+    font-weight: 500;
+  }
+
+  /* Stations navigation */
+  .klu-stations {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  .klu-station,
+  .klu-station--route {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--ff-display);
+    font-weight: 800;
+    color: var(--wn-paper);
+    letter-spacing: -0.005em;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+  }
+
+  .klu-station {
+    /* Baseline: static (mobile, no-JS, crawlers) */
+    position: static;
+    transform: none;
+    background: var(--wn-paper);
+    color: var(--wn-green-deep);
+    text-shadow: none;
+    margin-bottom: var(--sp-3);
+    width: 100%;
+  }
+
+  .klu-station[open] {
+    margin-bottom: 0;
+  }
+
+  .klu-station-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: var(--sp-3);
+    border-radius: var(--r-lg);
+    transition: background var(--dur-2) var(--ease-out);
+  }
+
+  .klu-station-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .klu-station-summary:hover {
+    background: rgba(220, 109, 18, 0.1);
+  }
+
+  .klu-station-summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 4px;
+  }
+
+  .klu-station .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: var(--wn-orange);
+    transition: all var(--dur-2) var(--ease-out);
+    flex-shrink: 0;
+  }
+
+  .klu-station[open] .dot {
+    width: 24px;
+    height: 24px;
+    background: var(--wn-orange);
+    box-shadow: 0 0 0 4px rgba(220, 109, 18, 0.3);
+  }
+
+  .klu-station .label {
+    font-size: 15px;
+    white-space: nowrap;
+    color: var(--wn-paper);
+  }
+
+  /* Route station (blog): plain link styling */
+  .klu-station--route {
+    text-decoration: none;
+  }
+
+  .klu-station--route:hover .dot {
+    width: 24px;
+    height: 24px;
+    background: var(--wn-orange);
+  }
+
+  .klu-station--route:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 4px;
+    border-radius: var(--r-lg);
+  }
+
+  /* Disclosure panel */
+  .klu-panel {
+    background: var(--wn-paper);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-card);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    overflow: hidden;
+    margin: 0 var(--sp-4) var(--sp-6);
+  }
+
+  .klu-panel-text {
+    padding: var(--sp-6);
+    background: var(--wn-green-deep);
+    color: var(--wn-paper);
+  }
+
+  .klu-panel-text .eyebrow {
+    display: block;
+    margin-bottom: var(--sp-2);
+    color: var(--wn-violet-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+  }
+
+  .klu-panel-text h2 {
+    font-size: var(--fs-h3);
+    margin-bottom: var(--sp-4);
+    line-height: var(--lh-tight);
+  }
+
+  .klu-panel-text .body-content {
+    line-height: var(--lh-normal);
+    color: rgba(247, 246, 241, 0.9);
+  }
+
+  .klu-panel-text .body-content :global(p) {
+    margin-bottom: 1em;
+  }
+
+  .klu-panel-text .body-content :global(ul) {
+    padding-left: var(--sp-5);
+    margin: 0 0 1em;
+  }
+
+  .klu-panel-text .body-content :global(li) {
+    margin-bottom: var(--sp-2);
+  }
+
+  .klu-panel-text .body-content :global(a) {
+    color: var(--wn-violet-soft);
+    word-break: break-all;
+  }
+
+  .klu-panel-text .body-content :global(h3) {
+    font-size: var(--fs-h4);
+    margin: var(--sp-4) 0 var(--sp-2);
+  }
+
+  /* Inline legal content styling */
+  .klu-legal-inline {
+    margin-top: var(--sp-6);
+    padding-top: var(--sp-4);
+    border-top: 1px solid rgba(247, 246, 241, 0.2);
+  }
+
+  .klu-legal-inline :global(h2) {
+    font-size: var(--fs-h4);
+    margin-bottom: var(--sp-2);
+  }
+
+  .klu-legal-inline :global(p) {
+    font-size: var(--fs-body);
+    line-height: var(--lh-normal);
+    margin-bottom: var(--sp-3);
+  }
+
+  /* Nested legal disclosure */
+  .klu-legal-nested {
+    margin-top: var(--sp-4);
+    background: rgba(247, 246, 241, 0.1);
+    border-radius: var(--r-md);
+    border: 1px solid rgba(247, 246, 241, 0.2);
+  }
+
+  .klu-legal-nested summary {
+    cursor: pointer;
+    padding: var(--sp-3) var(--sp-4);
+    font-weight: 600;
+    list-style: none;
+  }
+
+  .klu-legal-nested summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .klu-legal-nested summary:before {
+    content: "▸";
+    margin-right: var(--sp-2);
+    transition: transform var(--dur-1) var(--ease-out);
+  }
+
+  .klu-legal-nested[open] summary:before {
+    transform: rotate(90deg);
+  }
+
+  .klu-legal-nested > div {
+    padding: 0 var(--sp-4) var(--sp-4);
+  }
+
+  .klu-legal-nested > div :global(h2) {
+    font-size: var(--fs-h4);
+    margin-bottom: var(--sp-2);
+  }
+
+  .klu-legal-nested > div :global(p) {
+    font-size: var(--fs-body);
+    line-height: var(--lh-normal);
+    margin-bottom: var(--sp-3);
+  }
+
+  .klu-panel-photo {
+    background-color: var(--wn-mint-200);
+    background-image: var(--klu-panel-photo-texture, none);
+    background-size: 700px auto;
+    background-repeat: repeat;
+    background-blend-mode: soft-light;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    overflow: hidden;
+  }
+
+  .klu-panel-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .klu-panel-photo .placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-6);
+    text-align: center;
+  }
+
+  .klu-panel-photo .placeholder .kind {
+    font-family: var(--ff-display);
+    font-weight: 700;
+    font-size: var(--fs-h4);
+    color: var(--wn-graphite);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .klu-panel-photo .placeholder .hint {
+    font-size: var(--fs-small);
+    color: var(--fg-soft);
+  }
+
+  /* Desktop curve overlay (≥ 821px) */
+  @media (min-width: 821px) {
+    .klu-band[data-mode="home"] .klu-station {
+      position: absolute;
+      left: var(--klu-x);
+      top: var(--klu-y);
+      transform: translate(-50%, -50%);
+      background: none;
+      color: var(--wn-paper);
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+      margin-bottom: 0;
+      width: auto;
+    }
+
+    .klu-band[data-mode="home"] .klu-station[open] {
+      position: absolute;
+      left: var(--klu-x);
+      top: var(--klu-y);
+    }
+
+    .klu-band[data-mode="home"] .klu-panel {
+      position: absolute;
+      top: calc(var(--klu-y, 50) * 1vh + 40px);
+      left: calc(var(--klu-x, 50) * 1vw + 40px);
+      min-width: 500px;
+      max-width: 700px;
+      grid-template-columns: 1fr 1fr;
+      margin: 0;
+      z-index: 5;
+    }
+
+    .klu-band[data-mode="home"] .klu-station-summary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  /* Compact mode styling */
+  .klu-band[data-mode="compact"] {
+    height: var(--klu-compact-h);
+    min-height: var(--klu-compact-h);
+  }
+
+  .klu-band[data-mode="compact"] .klu-river::after {
+    opacity: 0;
+  }
+
+  .klu-band[data-mode="compact"] .klu-band-svg path.river,
+  .klu-band[data-mode="compact"] .klu-band-svg path.river-shadow {
+    stroke-width: 38;
+  }
+
+  .klu-band[data-mode="compact"] .klu-logo {
+    max-width: 120px;
+    bottom: var(--sp-4);
+    left: var(--sp-4);
+  }
+
+  .klu-band[data-mode="compact"] .klu-stations {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-5);
+    height: 100%;
+  }
+
+  .klu-band[data-mode="compact"] .klu-station,
+  .klu-band[data-mode="compact"] .klu-station--route {
+    position: static;
+    transform: none;
+    flex-direction: row;
+  }
+
+  .klu-band[data-mode="compact"] .klu-station .label,
+  .klu-band[data-mode="compact"] .klu-station--route .label {
+    padding: 4px 10px;
+    background: rgba(174, 26, 110, 0.8);
+    color: var(--wn-paper);
+    border-radius: var(--r-pill);
+  }
+
+  .klu-band[data-mode="compact"] .klu-panel {
+    display: none;
+  }
+
+  /* Mobile responsiveness (≤ 820px) */
+  @media (max-width: 820px) {
+    .klu-band[data-mode="home"] {
+      height: auto;
+      min-height: var(--klu-hero-h);
+      background-image: var(--klu-texture-url, none);
+      background-size: cover;
+      background-attachment: fixed;
+    }
+
+    .klu-band[data-mode="home"] .klu-river::after {
+      display: none;
+    }
+
+    .klu-band[data-mode="home"] .klu-band-svg {
+      display: none;
+    }
+
+    .klu-band[data-mode="home"] .klu-logo {
+      bottom: var(--sp-6);
+      left: var(--sp-6);
+      max-width: 140px;
+    }
+
+    .klu-band[data-mode="home"] .klu-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .klu-band[data-mode="compact"] {
+      height: 60px;
+      min-height: 60px;
+    }
+
+    .klu-band[data-mode="compact"] .klu-band-svg path.river,
+    .klu-band[data-mode="compact"] .klu-band-svg path.river-shadow {
+      stroke-width: 22;
+    }
+
+    .klu-band[data-mode="compact"] .klu-logo {
+      max-width: 80px;
+      bottom: var(--sp-2);
+      left: var(--sp-2);
+    }
+  }
+</style>
