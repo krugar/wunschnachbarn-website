@@ -21,7 +21,7 @@
         "npm:@astrojs/check@~0.9.9",
         "npm:@astrojs/svelte@^8.1.2",
         "npm:astro-loader-sveltia-cms@~0.1.5",
-        "npm:astro@^6.4.7",
+        "npm:astro@^7.0.3",
         "npm:svelte@^5.56.3",
         "npm:typescript@^6.0.3"
       ]
