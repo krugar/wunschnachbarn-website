@@ -10,8 +10,19 @@
 export type StationId =
   | 'wir' | 'projekt' | 'ziele' | 'blog' | 'termine' | 'kontakt';
 
-/** Base path for GitHub Pages deployment. */
-export const BASE_PATH = '/wunschnachbarn-website';
+/**
+ * Base path, derived from the ONE canonical definition: `astro.config.mjs`'s
+ * `base`. Vite injects it as `import.meta.env.BASE_URL` (always with a
+ * trailing slash, e.g. '/wunschnachbarn-website/', or '/' at the site root)
+ * into every module it processes — including this one, under `vitest` (see
+ * vitest.config.ts's `getViteConfig()`, which reads the same astro.config.mjs)
+ * as much as under the real Astro build. No literal is hand-maintained here;
+ * changing `base` in one place is enough.
+ *
+ * Normalized to have NO trailing slash ('' at the root, '/wunschnachbarn-website'
+ * on GitHub Pages) to match `stripBasePath`/`buildUrl`'s existing convention below.
+ */
+export const BASE_PATH = (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '');
 
 /** Static definition of a station (D3: `kind` discriminant replaces isRoute/route). */
 export interface StationDef {
