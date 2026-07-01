@@ -173,6 +173,7 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
   // (DESIGN §5)
 
   import { isHomeRoute, buildUrl } from '../lib/band-state';
+  import { navigate } from 'astro:transitions/client';
 
   function updateMode() {
     const isHome = isHomeRoute(location.pathname);
@@ -203,6 +204,9 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
     }
   }
 
+  // Store the station ID to open after navigation
+  let pendingStationId: string | null = null;
+
   function handleSummaryClick(e: MouseEvent) {
     // Find the closest summary element (handles clicks on nested spans)
     const summary = (e.target as HTMLElement).closest('.klu-station-summary');
@@ -219,8 +223,11 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
       const parentDetails = summary.closest('.klu-station') as HTMLDetailsElement;
       if (parentDetails) {
         const stationId = parentDetails.id.replace('panel-', '');
+        pendingStationId = stationId; // Store for opening after navigation
         const homeUrl = buildUrl(`#${stationId}`);
-        window.location.href = homeUrl;
+
+        // Use Astro's client-side navigation for smoother transition
+        navigate(homeUrl);
       }
     }
   }
@@ -228,7 +235,18 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
   // Run on initial load and after every client-side navigation
   document.addEventListener('astro:page-load', () => {
     updateMode();
-    // Don't auto-open from hash on navigation, only on initial load
+
+    // If we have a pending station to open, open it now
+    if (pendingStationId) {
+      const panel = document.getElementById(`panel-${pendingStationId}`);
+      if (panel && panel.tagName === 'DETAILS') {
+        (panel as HTMLDetailsElement).open = true;
+      }
+      pendingStationId = null;
+    } else {
+      // Only auto-open from hash on initial load or direct navigation
+      openPanelFromHash();
+    }
   });
 
   window.addEventListener('popstate', () => {
