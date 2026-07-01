@@ -172,7 +172,7 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
   // Minimal JS: persisted route sync, escape-to-close, hash deep-link
   // (DESIGN §5)
 
-  import { isHomeRoute } from '../lib/band-state';
+  import { isHomeRoute, buildUrl } from '../lib/band-state';
 
   function updateMode() {
     const isHome = isHomeRoute(location.pathname);
@@ -203,6 +203,28 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
     }
   }
 
+  function handleSummaryClick(e: MouseEvent) {
+    // Find the closest summary element (handles clicks on nested spans)
+    const summary = (e.target as HTMLElement).closest('.klu-station-summary');
+    if (!summary) return;
+
+    // If we're not on home route, navigate to home with hash to open the panel
+    const isHome = isHomeRoute(location.pathname);
+    if (!isHome) {
+      e.preventDefault();
+      e.stopPropagation(); // Stop further bubbling to prevent multiple triggers
+      e.stopImmediatePropagation(); // Stop other listeners on the same element
+
+      // Extract station ID from parent details element
+      const parentDetails = summary.closest('.klu-station') as HTMLDetailsElement;
+      if (parentDetails) {
+        const stationId = parentDetails.id.replace('panel-', '');
+        const homeUrl = buildUrl(`#${stationId}`);
+        window.location.href = homeUrl;
+      }
+    }
+  }
+
   // Run on initial load and after every client-side navigation
   document.addEventListener('astro:page-load', () => {
     updateMode();
@@ -215,6 +237,9 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
   });
 
   window.addEventListener('keydown', handleKeyDown);
+
+  // Delegated click handler for summary elements
+  document.addEventListener('click', handleSummaryClick);
 
   // Initial setup
   updateMode();
@@ -410,7 +435,7 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
     /* Baseline: static (mobile, no-JS, crawlers) */
     position: static;
     transform: none;
-    background: var(--wn-paper);
+    /* background: var(--wn-paper); */
     color: var(--wn-green-deep);
     text-shadow: none;
     margin-bottom: var(--sp-3);
@@ -500,8 +525,8 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
 
   .klu-panel-text {
     padding: var(--sp-6);
-    background: var(--wn-green-deep);
-    color: var(--wn-paper);
+    background: var(--card-bg);
+    color: var(--card-fg);
   }
 
   .klu-panel-text .eyebrow {
@@ -512,6 +537,10 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
     letter-spacing: 0.14em;
     font-size: var(--fs-eyebrow);
     font-weight: 600;
+  }
+
+  .klu-panel-text h1, h2, h3, h4, h5 {
+    color: var(--card-fg);
   }
 
   .klu-panel-text h2 {
