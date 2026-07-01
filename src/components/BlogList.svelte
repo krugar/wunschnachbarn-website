@@ -24,6 +24,9 @@
 
   let { posts, categories }: Props = $props();
 
+  // Import buildUrl for base path handling
+  import { buildUrl } from '../lib/band-state.js';
+
   // State: active category filter
   let activeCategory = $state('Alle');
 
@@ -100,7 +103,7 @@
     {:else}
       {#each filteredPosts as post}
         <article class="blog-post">
-          <a href={`/blog/${post.slug}`} class="post-link">
+          <a href={buildUrl(`/blog/${post.slug}`)} class="post-link">
             <div class="post-thumb">
               {#if post.heroImage}
                 <img

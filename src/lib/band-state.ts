@@ -10,6 +10,9 @@
 export type StationId =
   | 'wir' | 'projekt' | 'ziele' | 'blog' | 'termine' | 'kontakt';
 
+/** Base path for GitHub Pages deployment. */
+export const BASE_PATH = '/wunschnachbarn-website';
+
 /** Static definition of a station (D3: `kind` discriminant replaces isRoute/route). */
 export interface StationDef {
   id: StationId;
@@ -39,9 +42,17 @@ function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n));
 }
 
+/** Strip the base path from a route URL. */
+export function stripBasePath(route: string): string {
+  if (!route.startsWith(BASE_PATH)) return route;
+  const withoutBase = route.slice(BASE_PATH.length);
+  return withoutBase || '/';
+}
+
 /** True for the home route (and the degenerate empty path). */
 export function isHomeRoute(route: string): boolean {
-  return route === '/' || route === '';
+  const normalizedRoute = stripBasePath(route);
+  return normalizedRoute === '/' || normalizedRoute === '';
 }
 
 /**
@@ -73,6 +84,13 @@ export function isCompact(i: BandInput): boolean {
   return bandProgress(i) >= 1;
 }
 
+/** Build a full URL with base path for navigation. */
+export function buildUrl(path: string): string {
+  // Remove leading slash and ensure consistent formatting
+  const cleanPath = path.replace(/^\//, '');
+  return `${BASE_PATH}/${cleanPath}`;
+}
+
 /** Side effect a station click asks the component to perform. */
 export type ClickEffect =
   | { kind: 'none' }
@@ -97,9 +115,10 @@ export function reduceStationClick(
   current: BandInput,
 ): ClickResult {
   if (station.kind === 'route') {
+    const targetRoute = station.route ?? '/';
     return {
       activeStationId: current.activeStationId,
-      effect: { kind: 'navigate', route: station.route ?? '/' },
+      effect: { kind: 'navigate', route: buildUrl(targetRoute) },
     };
   }
 

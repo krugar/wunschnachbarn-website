@@ -9,6 +9,9 @@ import {
   isHomeRoute,
   reduceStationClick,
   reconcileOnCompactChange,
+  stripBasePath,
+  buildUrl,
+  BASE_PATH,
   type BandInput,
   type StationDef,
 } from '../src/lib/band-state.ts';
@@ -31,6 +34,25 @@ function input(over: Partial<BandInput> = {}): BandInput {
   };
 }
 
+// --- stripBasePath --------------------------------------------------------
+
+Deno.test('stripBasePath: removes base path from full URL', () => {
+  assertEquals(stripBasePath(BASE_PATH), '/');
+  assertEquals(stripBasePath(`${BASE_PATH}/`), '/');
+  assertEquals(stripBasePath(`${BASE_PATH}/blog`), '/blog');
+  assertEquals(stripBasePath(`${BASE_PATH}/blog/post-1`), '/blog/post-1');
+  assertEquals(stripBasePath('/'), '/');
+  assertEquals(stripBasePath('/blog'), '/blog');
+});
+
+// --- buildUrl -------------------------------------------------------------
+
+Deno.test('buildUrl: adds base path to relative URL', () => {
+  assertEquals(buildUrl('/'), `${BASE_PATH}/`);
+  assertEquals(buildUrl('/blog'), `${BASE_PATH}/blog`);
+  assertEquals(buildUrl('/blog/post-1'), `${BASE_PATH}/blog/post-1`);
+});
+
 // --- isHomeRoute ------------------------------------------------------------
 
 Deno.test('isHomeRoute: / and empty are home, others are not', () => {
@@ -38,6 +60,11 @@ Deno.test('isHomeRoute: / and empty are home, others are not', () => {
   assertEquals(isHomeRoute(''), true);
   assertEquals(isHomeRoute('/blog'), false);
   assertEquals(isHomeRoute('/impressum'), false);
+  // With base path
+  assertEquals(isHomeRoute(BASE_PATH), true);
+  assertEquals(isHomeRoute(`${BASE_PATH}/`), true);
+  assertEquals(isHomeRoute(`${BASE_PATH}/blog`), false);
+  assertEquals(isHomeRoute(`${BASE_PATH}/impressum`), false);
 });
 
 // --- isCompact (defect 2 is the headline case) ------------------------------
@@ -49,6 +76,9 @@ Deno.test('isCompact: mobile forces compact', () => {
 Deno.test('isCompact: any /blog* route is compact', () => {
   assertEquals(isCompact(input({ route: '/blog' })), true);
   assertEquals(isCompact(input({ route: '/blog/some-post' })), true);
+  // With base path
+  assertEquals(isCompact(input({ route: `${BASE_PATH}/blog` })), true);
+  assertEquals(isCompact(input({ route: `${BASE_PATH}/blog/some-post` })), true);
 });
 
 Deno.test('isCompact: home + scrolled past 1.0*viewport is compact (R-O5)', () => {
@@ -85,6 +115,9 @@ Deno.test('bandProgress: mobile, blog, and standalone routes are fully compact (
   assertEquals(bandProgress(input({ isMobile: true, scrollY: 0 })), 1);
   assertEquals(bandProgress(input({ route: '/blog', scrollY: 0 })), 1);
   assertEquals(bandProgress(input({ route: '/impressum', scrollY: 0 })), 1);
+  // With base path
+  assertEquals(bandProgress(input({ route: `${BASE_PATH}/blog`, scrollY: 0 })), 1);
+  assertEquals(bandProgress(input({ route: `${BASE_PATH}/impressum`, scrollY: 0 })), 1);
 });
 
 Deno.test('bandProgress: zero viewport height degrades to 1 (no divide-by-zero)', () => {
@@ -100,7 +133,7 @@ Deno.test('isCompact tracks the END of the dive (progress >= 1)', () => {
 
 Deno.test('R5: clicking a route station navigates, leaves active unchanged', () => {
   const r = reduceStationClick(ROUTE, input({ activeStationId: 'wir' }));
-  assertEquals(r.effect, { kind: 'navigate', route: '/blog' });
+  assertEquals(r.effect, { kind: 'navigate', route: `${BASE_PATH}/blog` });
   assertEquals(r.activeStationId, 'wir');
 });
 

@@ -8,6 +8,9 @@
     isHomeRoute,
     reduceStationClick,
     reconcileOnCompactChange,
+    stripBasePath,
+    buildUrl,
+    BASE_PATH,
     type BandInput,
     type ClickEffect,
     type StationDef,
@@ -127,7 +130,7 @@
   }
 
   function navigateToHome() {
-    navigate('/');
+    navigate(buildUrl('/'));
   }
 
   // Label for a station: CMS label if the section exists, else the structural default.
@@ -152,7 +155,8 @@
   // Scrollspy: highlight the prose section nearest the top of the viewport.
   // Only meaningful on home, in compact (reading) mode. (SPEC R9.)
   function updateScrollspy() {
-    if (!isHomeRoute(route) || !compact) return;
+    const normalizedRoute = stripBasePath(route);
+    if (!isHomeRoute(normalizedRoute) || !compact) return;
     const proseSections = document.querySelectorAll('.section-prose');
     let current: string | null = null;
     let minDistance = Infinity;
@@ -229,7 +233,7 @@
 >
   <a href="#main" class="klu-skip">Zum Inhalt springen</a>
 
-  {#if route.startsWith('/blog')}
+  {#if stripBasePath(route).startsWith('/blog')}
     <header class="klu-blog-nav">
       <button class="back-home" onclick={navigateToHome} aria-label="Zurück zur Startseite">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
