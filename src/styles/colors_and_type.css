@@ -183,7 +183,6 @@ h4 { font-size: var(--fs-h4); font-weight: 700; line-height: var(--lh-snug); }
 p {
   margin: 0 0 1em;
   text-wrap: pretty;
-  max-width: 62ch;
 }
 
 a {
