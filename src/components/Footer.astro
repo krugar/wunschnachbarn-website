@@ -1,12 +1,26 @@
 ---
+// Same defect, same file, twice: this was a hand-typed `/src/...` dev-server
+// path, not a real production URL at all (not even base-prefix-able) —
+// resolves via Astro's asset pipeline instead, same pattern as Base.astro's
+// bandTexture import.
+import logo from '../assets/logo.svg';
+
 const year = new Date().getFullYear();
+// Astro does NOT rewrite hand-typed href literals to include the configured
+// `base` (verified against real build output: only Astro's own asset/routing
+// output gets it automatically). import.meta.env.BASE_URL is the one
+// canonical source (astro.config.mjs's `base`) — but whether it carries a
+// trailing slash is NOT guaranteed (verified: with base: '/wunschnachbarn-website'
+// it does not). Strip any trailing slash and always join with exactly one, so
+// this is correct whether `base` is '/', '/foo', or '/foo/'.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <footer class="site-footer" role="contentinfo">
   <div class="footer-inner">
     <div class="footer-brand">
       <img
-        src="/src/assets/logo.svg"
+        src={logo.src}
         alt="Wunschnachbarn Bonn eG"
         class="footer-logo"
         width="240"
@@ -17,10 +31,10 @@ const year = new Date().getFullYear();
     <nav class="footer-nav" aria-label="Fußzeilen-Navigation">
       <ul>
         <li>
-          <a href="/impressum">Impressum</a>
+          <a href={`${base}/impressum`}>Impressum</a>
         </li>
         <li>
-          <a href="/datenschutz">Datenschutz</a>
+          <a href={`${base}/datenschutz`}>Datenschutz</a>
         </li>
       </ul>
     </nav>
