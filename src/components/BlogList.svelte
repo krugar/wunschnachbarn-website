@@ -251,7 +251,7 @@
     width: 120px;
     height: 120px;
     background: var(--wn-mint-200);
-    background-image: url("/assets/design-system/forest-texture.png");
+    background-image: url("../assets/design-system/forest-texture.png");
     background-size: 500px auto;
     background-repeat: repeat;
     border-radius: var(--r-md);

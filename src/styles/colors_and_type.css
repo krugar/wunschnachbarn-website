@@ -244,14 +244,14 @@ a:focus-visible {
 
 .bg-forest {
   background-color: var(--wn-mint-300);
-  background-image: url("/assets/design-system/forest-texture.png");
+  background-image: url("../assets/design-system/forest-texture.png");
   background-size: 800px auto;
   background-repeat: repeat;
   background-blend-mode: multiply;
 }
 .bg-forest-light {
   background-color: var(--wn-mint-200);
-  background-image: url("/assets/design-system/forest-texture.png");
+  background-image: url("../assets/design-system/forest-texture.png");
   background-size: 700px auto;
   background-repeat: repeat;
   background-blend-mode: soft-light;
