@@ -170,10 +170,72 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
 
 <script>
   // Minimal JS: persisted route sync, escape-to-close, hash deep-link
-  // (DESIGN §5)
+  // (DESIGN §5), plus fit-based curve-overlay gate + forced-open baseline
+  // reading (SPEC/DESIGN_hero-fullscreen-amendment-1.md, RB19-RB23).
 
   import { isHomeRoute, buildUrl } from '../lib/band-state';
   import { navigate } from 'astro:transitions/client';
+
+  // RB19: curve-overlay requires BOTH enough width and enough height to fit
+  // the floating panels without collision (found via a real device: a
+  // landscape phone can clear a width-only threshold while having nowhere
+  // near enough height). These two numbers are the single authored source —
+  // the CSS <style> block below keeps a literal media-query condition that
+  // must match them (a CSS custom property cannot appear inside an @media
+  // condition; DESIGN_hero-fullscreen-amendment-1.md §2). A Vitest test
+  // (tests/klufterbach-band-curve-gate.test.ts) statically compares the two
+  // so drift fails CI instead of shipping silently.
+  const CURVE_MIN_W = 821; // px
+  const CURVE_MIN_H = 600; // px — provisional, SPEC amendment 1 D6
+
+  const curveOverlayQuery = matchMedia(
+    `(min-width: ${CURVE_MIN_W}px) and (min-height: ${CURVE_MIN_H}px)`
+  );
+
+  /** The five section-kind station <details> — excludes the nested
+   *  Datenschutz disclosure (RB12), which was never part of the
+   *  klu-stations exclusivity group and RB21/RB22 don't touch it. */
+  function sectionDetails(): HTMLDetailsElement[] {
+    return Array.from(
+      document.querySelectorAll('.klu-station[id^="panel-"]:not(#panel-datenschutz)')
+    ) as HTMLDetailsElement[];
+  }
+
+  // RB21: JS-enhanced baseline reading — force every section open and
+  // suspend native exclusivity, so the whole page reads by scrolling alone.
+  // No-JS baseline is unaffected (RB4/RB6/RB7 unchanged): this only runs
+  // when this script executes at all.
+  function applyForcedOpenBaseline() {
+    for (const el of sectionDetails()) {
+      el.removeAttribute('name');
+      el.open = true;
+    }
+  }
+
+  // RB22: entering curve-overlay resolves to a clean slate (D7) — restoring
+  // `name` does not retroactively enforce exclusivity on elements already
+  // open, so every panel is explicitly closed here.
+  function applyCurveOverlayCleanSlate() {
+    for (const el of sectionDetails()) {
+      el.open = false;
+      el.setAttribute('name', 'klu-stations');
+    }
+  }
+
+  // Only meaningful on the home route — /blog* has no curve-overlay/baseline
+  // distinction (its stations are a slim nav bar regardless of viewport).
+  function syncCurveOverlayGate() {
+    if (!isHomeRoute(location.pathname)) return;
+    if (curveOverlayQuery.matches) {
+      applyCurveOverlayCleanSlate();
+    } else {
+      applyForcedOpenBaseline();
+    }
+  }
+
+  // Fires only on a real boundary crossing, not per resize pixel — no manual
+  // resize/orientationchange listener or debounce needed.
+  curveOverlayQuery.addEventListener('change', syncCurveOverlayGate);
 
   function updateMode() {
     const isHome = isHomeRoute(location.pathname);
@@ -184,13 +246,16 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
   }
 
   function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      // Close all open station panels
-      const openPanels = document.querySelectorAll('.klu-station[name="klu-stations"][open]');
-      openPanels.forEach(panel => {
-        (panel as HTMLDetailsElement).open = false;
-      });
-    }
+    if (e.key !== 'Escape') return;
+    // RB23: Escape is a no-op while forced-open baseline reading (RB21) is
+    // active — closing everything would defeat the point of that mode.
+    // Only meaningful once curve-overlay's exclusivity group exists again.
+    if (!curveOverlayQuery.matches) return;
+    // Close all open station panels
+    const openPanels = document.querySelectorAll('.klu-station[name="klu-stations"][open]');
+    openPanels.forEach(panel => {
+      (panel as HTMLDetailsElement).open = false;
+    });
   }
 
   function openPanelFromHash() {
@@ -235,6 +300,7 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
   // Run on initial load and after every client-side navigation
   document.addEventListener('astro:page-load', () => {
     updateMode();
+    syncCurveOverlayGate(); // RB19/RB21/RB22: set initial baseline/curve state
 
     // If we have a pending station to open, open it now
     if (pendingStationId) {
@@ -261,6 +327,7 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
 
   // Initial setup
   updateMode();
+  syncCurveOverlayGate();
   openPanelFromHash();
 </script>
 
@@ -700,8 +767,15 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
     color: var(--fg-soft);
   }
 
-  /* Desktop curve overlay (≥ 821px) */
-  @media (min-width: 821px) {
+  /* Desktop curve overlay: requires BOTH enough width and enough height
+     (RB19, SPEC/DESIGN_hero-fullscreen-amendment-1.md) — a width-only check
+     let a landscape phone (plenty wide, nowhere near tall enough) through.
+     Keep this literal numerically in sync with CURVE_MIN_W / CURVE_MIN_H in
+     this component's <script> above — a CSS custom property cannot appear
+     inside an @media condition (var() resolves per-element at computed-value
+     time; media features are evaluated statically before that ever happens).
+     tests/klufterbach-band-curve-gate.test.ts asserts these stay equal. */
+  @media (min-width: 821px) and (min-height: 600px) {
     .klu-band[data-mode="home"] .klu-station {
       position: absolute;
       left: var(--klu-x);
@@ -843,8 +917,13 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
     display: none;
   }
 
-  /* Mobile responsiveness (≤ 820px) */
-  @media (max-width: 820px) {
+  /* Mobile / baseline responsiveness: the logical complement of the curve-
+     overlay condition above (De Morgan's law — NOT(min-width:821 AND
+     min-height:600) = max-width:820 OR max-height:599), so a wide-but-short
+     viewport (e.g. a landscape phone) gets the baseline treatment here too,
+     not just a narrow one. Keep the two width numbers and the two height
+     numbers each in sync in pairs; same drift guard as above. */
+  @media (max-width: 820px), (max-height: 599px) {
     .klu-band[data-mode="home"] {
       height: auto;
       min-height: var(--klu-hero-h);
