@@ -598,12 +598,10 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
 
   /* Disclosure panel */
   .klu-panel {
-    background: var(--wn-paper);
     border-radius: var(--r-xl);
-    box-shadow: var(--shadow-card);
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 10vw;
     overflow: hidden;
     margin: 0 var(--sp-4) var(--sp-6);
   }
@@ -612,6 +610,8 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
     padding: var(--sp-6);
     background: var(--card-bg);
     color: var(--card-fg);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-card);
   }
 
   .klu-panel-text .eyebrow {
@@ -735,6 +735,8 @@ const rootLabel = isHome ? undefined : 'Hauptnavigation';
     justify-content: center;
     min-height: 300px;
     overflow: hidden;
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-card);
   }
 
   .klu-panel-photo img {
