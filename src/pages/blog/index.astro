@@ -62,9 +62,9 @@ const categories = ['Alle', ...Array.from(categorySet).sort()];
     <article class="blog-page">
       <header class="blog-header">
         <span class="eyebrow">Blog</span>
-        <h1>Aus dem Plenum</h1>
+        <h1>Neues vom Klufterbach</h1>
         <p class="blog-subline">
-          Berichte aus unseren Arbeitskreisen, Plenen und vom Weg zu unserem gemeinsamen Zuhause.
+          Berichte aus der Gemeinschaft, dem Wald und vom Weg zu unserem gemeinsamen Zuhause.
         </p>
       </header>
 
@@ -78,3 +78,26 @@ const categories = ['Alle', ...Array.from(categorySet).sort()];
 
   <Footer />
 </Base>
+<style>
+  .main {
+
+  }
+  .blog-page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--sp-8) var(--sp-5);
+    background-color: var(--wn-paper);
+  }
+
+  .blog-header {
+    margin-bottom: var(--sp-8);
+    text-align: center;
+  }
+
+  .blog-header .eyebrow {
+    color: var(--wn-violet);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+  }
