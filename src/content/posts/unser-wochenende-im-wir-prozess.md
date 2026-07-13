@@ -13,20 +13,48 @@ draft: false
 ![Anne und Gertrud](https://wunschnachbarn.org/wp-content/uploads/20260110GertrudAnneWirProzess-scaled-1-150x150.jpg)
 
 **Redaktion:** Hand aufs Herz – ein ganzes Wochenende ohne ModeratorIn und ohne festes Thema. Wie war euer erster Gedanke, als ihr davon gehört habt?
+
+
 **Anne (erfahren):** (lacht) Ich kannte das Format ja schon. Trotzdem ist da jedes Mal dieser kurze Moment von: „Oje, schaffen wir das dieses Mal wieder?“ Man weiß nie, was passiert. Aber genau darin liegt die Kraft.
+
+
 **Gertrud (neu):** Ich war ehrlich gesagt etwas skeptisch. Ich bin erst seit letztem Jahr in der Genossenschaft und dachte: „Drei-Stunden-Blöcke und keiner sagt uns, was wir tun sollen? Wie soll das gehen?“ Es war eine Mischung aus Neugier und echter Nervosität.
+
+
 **Redaktion:** „Keine Moderation“ klingt ja erst einmal nach einem strukturlosen Durcheinander. Gibt es in einem Wir-Prozess denn gar keinen Rahmen, an dem man sich festhalten kann?
+
+
 **Anne:** Doch, absolut. Der Halt liegt nicht in einer Person, die das Sagen hat, sondern in den Kommunikationsempfehlungen. Die sind eigentlich simpel, aber in der Umsetzung extrem wirkungsvoll.
+
+
 **Gertrud:** Genau, das ist eine echte Umstellung! Eine der wichtigsten Empfehlungen ist das Sprechen in der Ich-Form. Ich achte darauf nicht zu dozieren oder über Andere zu reden, sondern nur von mir selbst und den eigenen Erfahrungen. Das nimmt sofort die Schärfe aus dem Gespräch.
+
+
 **Anne:** Dazu gehört auch die aufmerksame emotionale Beteiligung. Wir sind nicht nur körperlich anwesend, sondern jede(r) übernimmt die Verantwortung für den eigenen Prozess. Wenn ich will, dass es gelingt, braucht es das Wagnis mich auch mit meinen Gefühlen einzubringen.
+
+
 **Redaktion:** Und wie habt ihr sichergestellt, dass nicht alle durcheinanderreden oder sich anschweigen?
+
+
 **Gertrud:** Vor allem durch aufmerksames Zuhören. Das klingt banal, ist aber gar nicht immer einfach. Man lernt, wirklich hinzuhören, was der andere braucht oder was er eben nicht will. Manchmal finde ich es schwierig Stille auszuhalten. Ich dachte oft, ich müsste die Leere füllen, aber habe gelernt, dass Pausen wichtig sind, um nachzuspüren.
+
+
 **Anne:** Es gibt eben kein vorher festgelegtes Thema. Alles, was gerade da ist, darf ausgesprochen werden. So nutzen wir unsere gemeinsamen Ressourcen viel besser und entwickeln eine Vision, die wirklich alle einbindet.
+
+
 **Redaktion:** Gab es einen Moment, der euch besonders beeindruckt hat?
+
+
 **Gertrud:** Für mich war es der Moment, als ich gemerkt habe, dass ich mich wirklich öffnen kann. Ich habe Dinge über mich erzählt, zum Beispiel, wie viel Nähe ich brauche, ohne dass ich das Gefühl habe, bewertet zu werden. Ich hätte nicht gedacht, dass ich mich in der Gruppe so schnell so sicher fühle.
+
+
 **Anne:** Das war für uns Erfahrene auch toll. Wir haben so viel Neues über euch erfahren, was in unseren Plena und Arbeitskreisen oft gar keinen Platz hat, weil es dort meist um Sachthemen geht. Ich habe plötzlich ganz andere Facetten an Menschen gesehen, die ich aus unserer bisherigen Zusammenarbeit schon gut zu kennen glaubte.
+
+
 **Redaktion:** Was nehmt ihr für den Alltag in der Genossenschaft mit?
 **Gertrud:** Mut! Den Mut, auch mal Unangenehmes oder Nerviges anzusprechen, bevor es zum großen Konflikt wird. Gleichzeitig nehme ich auch die Gewissheit mit, dass Kommunikation auch ohne Leitung gelingt.
+
+
 **Anne:** Ich nehme die Zuversicht mit, dass unsere Vision als Gemeinschaft trägt. Das „Wir“ ist nach diesem Wochenende definitiv ein ganzes Stück größer geworden.
 
 **Stimmen aus der Runde**
